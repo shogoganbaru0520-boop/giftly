@@ -1,0 +1,1329 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Giftly</title>
+<!-- スマホのホーム画面に追加できるようにする設定 -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#6a4fd6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Giftly">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pacifico&family=Zen+Maru+Gothic:wght@400;500;700&display=swap">
+<style>
+/* レイアウト: スマホ1台分の縦長カラム。白地に紫のアクセント、下に4つのタブ */
+:root{
+  --bg:#f3f1f8;          /* 画面の外側 */
+  --surface:#ffffff;     /* アプリの地 */
+  --soft:#f6f4fb;        /* 入力欄やタイル */
+  --ink:#26223a;
+  --muted:#8a8699;
+  --line:#ebe8f2;
+  --accent:#6a4fd6;      /* 紫 */
+  --accent-soft:#eeeafd;
+  --pink:#e0567a;        /* バッジ「人気」・ハート */
+  --orange:#e98a2f;      /* バッジ「おすすめ」 */
+  --green:#2f9e6a;
+  --thumb-s:65%; --thumb-l:93%; --icon-l:42%;
+  --logo:"Pacifico",cursive;
+  --body:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121118;--surface:#1c1a24;--soft:#26232f;--ink:#efedf6;--muted:#9c98ab;--line:#2f2c3a;
+  --accent:#9c86f5;--accent-soft:#2e2847;--pink:#f07a98;--orange:#f2a55c;--green:#5cc796;
+  --thumb-s:30%;--thumb-l:24%;--icon-l:72%;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121118;--surface:#1c1a24;--soft:#26232f;--ink:#efedf6;--muted:#9c98ab;--line:#2f2c3a;
+  --accent:#9c86f5;--accent-soft:#2e2847;--pink:#f07a98;--orange:#f2a55c;--green:#5cc796;
+  --thumb-s:30%;--thumb-l:24%;--icon-l:72%;color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.6}
+button{font:inherit;color:inherit}
+.app{max-width:440px;min-height:100%;margin:0 auto;background:var(--surface);position:relative;padding-bottom:84px;box-shadow:0 0 0 1px var(--line)}
+.pad{padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* 上部バー */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding-block:10px;min-height:56px}
+.bar h1{margin:0;text-align:center;font-size:17px;font-weight:700}
+.iconbtn{border:0;background:transparent;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;cursor:pointer;position:relative;color:var(--ink)}
+.iconbtn:hover{background:var(--soft)}
+.dot{position:absolute;top:4px;right:2px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--pink);color:#fff;font-size:11px;font-weight:700;line-height:18px}
+.logo{font-family:var(--logo);font-size:30px;color:var(--ink);line-height:1.2}
+
+/* 共通部品 */
+.searchbox{display:flex;align-items:center;gap:8px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--muted);width:100%;cursor:text;text-align:left}
+.searchbox input{border:0;background:transparent;font:inherit;color:var(--ink);flex:1;min-width:0;outline:none}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 10px}
+.sec h2{margin:0;font-size:16px;font-weight:700}
+.more{border:0;background:none;color:var(--muted);font-size:12px;cursor:pointer}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 16px;font-size:13px;cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.pills.grid2{display:grid;grid-template-columns:1fr 1fr}
+.pills.grid3{display:grid;grid-template-columns:repeat(3,1fr)}
+.pills.grid2 .pill,.pills.grid3 .pill{padding:9px 6px;text-align:center}
+.label{font-weight:700;font-size:14px;margin:20px 0 10px}
+.primary{display:block;width:100%;border:0;border-radius:14px;background:var(--accent);color:#fff;font-weight:700;font-size:15px;padding:14px;cursor:pointer;box-shadow:0 6px 16px -8px var(--accent)}
+.primary:hover{filter:brightness(1.06)}
+.ghost{display:block;text-align:center;border:1px solid var(--line);border-radius:12px;padding:10px;text-decoration:none;color:var(--ink);font-size:13px;background:var(--surface)}
+.thumb{background:hsl(var(--h) var(--thumb-s) var(--thumb-l));color:hsl(var(--h) 45% var(--icon-l));display:grid;place-items:center;border-radius:14px;position:relative;overflow:hidden}
+.thumb svg.i{width:44%;height:44%;stroke-width:1.3}
+
+/* スプラッシュ */
+.splash{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding-block:40px;background:linear-gradient(170deg,#c89a6c 0%,#8b6446 60%,#5c4130 100%);color:#fff}
+.splash .logo{color:#fff;font-size:56px}
+.splash svg.i{width:56px;height:56px;stroke-width:1.2}
+.splash p{font-size:18px;letter-spacing:.08em;margin:0 0 40px;line-height:1.9}
+.splash .primary{background:#fff;color:#3b2a1e;max-width:300px;border-radius:999px;box-shadow:none}
+
+/* ホーム */
+.hero{margin-top:14px;border-radius:18px;padding:22px 20px;background:linear-gradient(120deg,hsl(28 60% 90%),hsl(340 60% 92%));color:#3b2a2e;display:grid;gap:8px;position:relative;overflow:hidden;cursor:pointer;border:0;text-align:left;width:100%}
+.hero b{font-size:17px;line-height:1.6;max-width:13em}
+.hero small{font-size:12px;opacity:.8}
+.hero svg.i{position:absolute;right:-6px;bottom:-10px;width:110px;height:110px;stroke-width:1;color:hsl(350 45% 55%);opacity:.55}
+.scenes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.scene{border:0;border-radius:16px;padding:14px 4px 10px;display:grid;justify-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:500;background:hsl(var(--h) var(--thumb-s) var(--thumb-l));color:var(--ink)}
+.scene svg.i{width:30px;height:30px;color:hsl(var(--h) 50% var(--icon-l))}
+.hscroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;margin-right:-18px}
+.hscroll .pcard{flex:0 0 132px}
+.diag{margin-top:22px;display:flex;align-items:center;gap:14px;width:100%;border:1px solid var(--line);background:var(--accent-soft);border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left}
+.diag .ic{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;flex:none}
+.diag b{display:block;font-size:14px}
+.diag span{font-size:12px;color:var(--muted)}
+
+/* シーン一覧 */
+.slist{display:grid;gap:10px;margin-top:6px}
+.srow{display:flex;align-items:center;gap:14px;border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:10px;cursor:pointer;text-align:left;width:100%}
+.srow .thumb{width:68px;height:68px;flex:none}
+.srow div.t{flex:1;min-width:0}
+.srow b{display:block;font-size:15px}
+.srow span{font-size:12px;color:var(--muted)}
+
+/* 商品カード */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px}
+.pcard{border:0;background:none;padding:0;text-align:left;cursor:pointer;min-width:0;display:grid;gap:6px;align-content:start}
+.pcard .thumb{aspect-ratio:1/1;width:100%;max-width:100%}
+.pcard .nm{font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pcard .pr{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.badge{position:absolute;top:8px;left:8px;font-size:10.5px;font-weight:700;color:#fff;padding:2px 8px;border-radius:6px;background:var(--pink)}
+.badge.rec{background:var(--orange)}
+.heart{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(255,255,255,.85);color:#8a8699;display:grid;place-items:center;cursor:pointer}
+.heart svg.i{width:17px;height:17px;stroke-width:1.9}
+.heart.on{color:#e0567a}.heart.on path{fill:currentColor}
+.sortbar{display:flex;gap:8px;margin:4px 0 14px;overflow-x:auto}
+.sortbar .pill{white-space:nowrap;padding:6px 14px;font-size:12px}
+.manner{border-radius:14px;background:var(--soft);padding:12px 14px;margin-bottom:16px;font-size:12.5px}
+.manner summary{cursor:pointer;font-weight:700;font-size:13px;list-style:none;display:flex;justify-content:space-between}
+.manner summary::-webkit-details-marker{display:none}
+.manner dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:10px 0 0}
+.manner dt{color:var(--muted)}.manner dd{margin:0;min-width:0}
+.empty{text-align:center;color:var(--muted);padding:40px 10px;display:grid;gap:12px;justify-items:center}
+.empty svg.i{width:44px;height:44px;stroke-width:1.2;color:var(--accent)}
+
+/* 商品詳細 */
+.dhero{aspect-ratio:1/1;max-width:100%;border-radius:0;position:relative}
+.dhero svg.i{width:38%;height:38%}
+.dtop{position:absolute;inset:0 0 auto;display:flex;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 0}
+.dtop .iconbtn{background:rgba(255,255,255,.85);color:#26223a;border-radius:50%}
+.dtop .iconbtn.on{color:#e0567a}.dtop .iconbtn.on path{fill:currentColor}
+.dbody{padding-block:18px 10px;display:grid;gap:12px}
+.dbody h2{margin:0;font-size:19px;line-height:1.5}
+.dprice{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.dprice small{font-size:12px;color:var(--muted);font-weight:400}
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.feat{border:1px solid var(--line);border-radius:12px;padding:10px 4px;text-align:center;font-size:11px;color:var(--muted);display:grid;justify-items:center;gap:2px}
+.feat.on{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.feat svg.i{width:20px;height:20px}
+.tips{font-size:12.5px;background:var(--soft);border-radius:12px;padding:10px 12px}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* カート */
+.citem{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);align-items:center}
+.citem .thumb{width:76px;height:76px;flex:none}
+.citem .t{flex:1;min-width:0;display:grid;gap:4px}
+.citem .t span{font-size:13px}
+.qty{display:flex;align-items:center;gap:4px}
+.qty button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center;color:var(--accent)}
+.qty button svg.i{width:14px;height:14px}
+.qty b{min-width:24px;text-align:center;font-variant-numeric:tabular-nums}
+textarea{width:100%;border:1px solid var(--line);background:var(--soft);border-radius:12px;padding:10px 12px;font:inherit;color:var(--ink);resize:vertical;min-height:84px}
+.counter{text-align:right;font-size:11px;color:var(--muted)}
+.radio{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:11px 14px;cursor:pointer;margin-bottom:8px}
+.radio:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.radio input{accent-color:var(--accent)}
+.total{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 12px;font-weight:700}
+.total b{font-size:20px;font-variant-numeric:tabular-nums}
+.demo{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
+
+/* マイページ */
+.prof{display:flex;align-items:center;gap:14px;padding-block:10px 18px}
+.avatar{width:62px;height:62px;border-radius:50%;background:var(--soft);display:grid;place-items:center;color:var(--muted)}
+.avatar svg.i{width:32px;height:32px}
+.menu{display:grid}
+.mrow{display:flex;align-items:center;gap:14px;padding:15px 4px;border:0;border-bottom:1px solid var(--line);background:none;cursor:pointer;text-align:left;width:100%}
+.mrow span{flex:1}
+.mrow em{font-style:normal;color:var(--muted);font-size:13px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0 6px}
+.status{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.status.done{background:color-mix(in srgb,var(--green) 15%,transparent);color:var(--green)}
+.odate{font-size:11px;color:var(--muted)}
+
+/* 診断 */
+.intro{border-radius:18px;background:var(--accent-soft);padding:22px;text-align:center;display:grid;justify-items:center;gap:10px;margin-top:6px}
+.intro .ic{width:48px;height:48px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center}
+.intro p{margin:0;font-size:13.5px;line-height:1.8}
+
+/* 検索のカテゴリー */
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cat{border:1px solid transparent;background:none;border-radius:14px;padding:8px 2px;cursor:pointer;display:grid;justify-items:center;gap:6px;font-size:11px}
+.cat .c{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:hsl(var(--h) var(--thumb-s) var(--thumb-l));color:hsl(var(--h) 50% var(--icon-l))}
+.cat[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+
+/* 下のタブ */
+.tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(440px,100%);background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px max(8px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-right,0px));z-index:10}
+.tabbar button{border:0;background:none;display:grid;justify-items:center;gap:2px;font-size:10.5px;color:var(--muted);cursor:pointer;padding:4px}
+.tabbar button[aria-current="page"]{color:var(--accent)}
+.tabbar button[aria-current="page"] svg.i{stroke-width:2.2}
+
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 18px;border-radius:999px;font-size:13px;z-index:20;transition:opacity .2s;max-width:calc(100% - 32px)}
+.note{font-size:11px;color:var(--muted);margin-top:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ここから楽天との連携用 */
+body{margin:0}
+[hidden]{display:none!important}
+label.label{display:block}
+.thumb img.ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#fff}
+.rklist{display:grid;gap:10px}
+.rkitem{display:flex;gap:6px;border:1px solid var(--line);border-radius:14px;padding:10px;align-items:center}
+.rkitem > a{display:flex;gap:12px;align-items:center;flex:1;min-width:0;text-decoration:none;color:var(--ink)}
+.wbtn{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.wbtn svg.i{width:19px;height:19px}
+.wbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.wimg{width:76px;height:76px;border-radius:14px;object-fit:cover;flex:none;background:#fff}
+.wthumb{border:0;padding:0;background:none;cursor:pointer;width:76px;height:76px;flex:none}
+.citem .nm2{font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.buy{justify-self:start;margin-top:4px;font-size:12px;font-weight:700;padding:6px 14px;border-radius:999px;text-decoration:none;background:#bf0000;color:#fff}
+.buy.ghostbuy{background:var(--surface);color:var(--ink);border:1px solid var(--line);font-weight:500}
+svg.i.inl{width:16px;height:16px;vertical-align:-3px}
+.buy.y{background:#ff0033}
+.src{display:inline-block;font-size:10px;font-weight:700;color:#fff;border-radius:4px;padding:0 6px;margin-right:6px;vertical-align:1px;background:#bf0000}
+.src.y{background:#ff0033}
+.stars{color:#f0a020;letter-spacing:-1px}
+.slsum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.slsum div{background:var(--soft);border-radius:12px;padding:8px 6px;text-align:center;display:grid;gap:1px}
+.slsum span{font-size:10.5px;color:var(--muted)}
+.slsum b{font-size:13px;font-variant-numeric:tabular-nums}
+.more-btn{width:100%;cursor:pointer;font-weight:700;color:var(--accent)}
+.shoplist{display:grid;gap:10px}
+.rnum{display:inline-block;font-size:11px;font-weight:700;color:var(--accent);margin-right:6px}
+.rankno{position:absolute;top:6px;left:6px;min-width:26px;height:26px;padding:0 6px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;background:#8a8699;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.rankno.r1{background:#d4a017}.rankno.r2{background:#9aa3ad}.rankno.r3{background:#b8763e}
+.rkwish{position:absolute;top:6px;right:6px;width:32px;height:32px;background:rgba(255,255,255,.9);color:#8a8699}
+.rkwish.on{background:var(--accent);color:#fff}
+.pcard .meta{font-size:11px;color:var(--muted)}
+.rkitem img{width:84px;height:84px;object-fit:cover;border-radius:10px;flex:none;background:#fff}
+.rkitem .t{min-width:0;display:grid;gap:2px}
+.rkitem .nm{font-size:12.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rkitem .meta{font-size:11px;color:var(--muted)}
+.field{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--soft);color:var(--ink)}
+.credit{font-size:11px;text-align:center;margin-top:18px}
+.credit a{color:var(--muted)}
+.hero-ph{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:96px;height:96px;border-radius:14px;overflow:hidden;display:none;box-shadow:0 6px 16px -8px rgba(0,0,0,.4)}
+.hero-ph img.ph{width:100%;height:100%;object-fit:cover;display:block;background:#fff}
+.hero:has(.hero-ph img){padding-right:124px}
+.hero:has(.hero-ph img) .hero-ph{display:block}
+.hero:has(.hero-ph img) > svg.i{display:none}
+.diag + .sec, .hero + .diag{margin-top:14px}
+.today{font-size:13px;color:var(--muted);margin:0 0 10px}
+.today b{color:var(--ink);font-size:16px}
+.evs{display:flex;gap:10px;overflow-x:auto;margin-right:-18px;padding-bottom:6px;scrollbar-width:none}
+.ev{flex:0 0 124px;border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--surface);text-align:left;cursor:pointer;display:grid;gap:4px;align-content:start}
+.ev .dt{font-size:11px;color:var(--muted)}
+.ev b{font-size:14px;line-height:1.4}
+.ev .left{justify-self:start;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:1px 8px}
+.ev.add{border-style:dashed;color:var(--muted);justify-items:center;text-align:center;font-size:12px;align-content:center}
+.range{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+select.field{cursor:pointer}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.setrow > span{display:flex;align-items:center;gap:10px}
+.seg3{display:flex;gap:6px}
+.seg3 .pill{padding:6px 12px;font-size:12px}
+/* いま話題 */
+.seg4{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.seg4 .pill{white-space:nowrap;padding:7px 14px;font-size:12.5px}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px}
+.vrow .vcard{flex:0 0 200px}
+.vcard{position:relative;min-width:0}
+.vcard > a{display:grid;gap:4px;text-decoration:none;color:var(--ink)}
+.vthumb{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:12px;overflow:hidden;background:var(--soft)}
+.vthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.vthumb .play{position:absolute;left:8px;bottom:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center}
+.vthumb .play svg.i{width:14px;height:14px;fill:#fff;stroke:none}
+.vcard .nm2,.acard .nm2{font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vcard .meta,.acard .meta{font-size:11px;color:var(--muted)}
+.vcard .favxbtn{position:absolute;top:6px;right:6px}
+.favxbtn{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.favxbtn svg.i{width:17px;height:17px;stroke-width:1.9}
+.favxbtn.on{color:#e0567a;border-color:#e0567a}.favxbtn.on path{fill:currentColor}
+.acard{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px}
+.acard > a{display:flex;gap:12px;align-items:center;flex:1;min-width:0;text-decoration:none;color:var(--ink)}
+.acard img,.acard .aimg{width:88px;height:66px;border-radius:10px;object-fit:cover;flex:none;background:var(--soft);display:grid;place-items:center;color:var(--muted)}
+.acard .t{display:grid;gap:3px;min-width:0}
+.users{color:#e0567a;font-weight:700}
+.vopen{border:0;background:none;padding:0;text-align:left;cursor:pointer;display:grid;gap:4px;color:var(--ink);width:100%;font:inherit}
+.aopen{border:0;background:none;padding:0;text-align:left;cursor:pointer;display:flex;gap:12px;align-items:center;flex:1;min-width:0;color:var(--ink);font:inherit}
+.vtag{position:absolute;right:8px;bottom:8px;font-size:10.5px;font-weight:700;color:#fff;background:rgba(106,79,214,.92);padding:2px 8px;border-radius:6px}
+.ytwrap{position:relative;aspect-ratio:16/9;max-width:100%;background:#000}
+.ytwrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vitem{display:grid;gap:6px}
+.vname{font-size:13px;font-weight:700;line-height:1.5}
+.vtag2{display:inline-block;font-size:10.5px;font-weight:700;border-radius:4px;padding:0 6px;margin-right:6px;background:var(--soft);color:var(--muted)}
+.vtag2.ok{background:var(--accent);color:#fff}
+.sc-ph{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;position:relative;overflow:hidden}
+.sc-ph img.ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#fff}
+</style>
+</head>
+<body>
+
+<div class="app" id="app"></div>
+<nav class="tabbar" id="tabbar" aria-label="メニュー"></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+// ================= アイコン（線で描いたSVG） =================
+const P = {
+  gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8c-1-3-5-4-5-1.5S10 8 12 8zm0 0c1-3 5-4 5-1.5S14 8 12 8z"/>',
+  cake:'<path d="M4 20h16M5 20v-7h14v7M5 16c2 1.5 4 1.5 7 0s5-1.5 7 0M12 13V9M12 6.5c0-1 1-1.6 1-2.5"/>',
+  rings:'<circle cx="9" cy="14" r="5"/><circle cx="15" cy="14" r="5"/><path d="M9 6l1.5-2h3L15 6"/>',
+  baby:'<circle cx="12" cy="12" r="8"/><path d="M9 11h.01M15 11h.01M9.5 14.5c1.5 1 3.5 1 5 0M12 4c-1 1-1 2 0 3"/>',
+  flower:'<circle cx="12" cy="8" r="2"/><path d="M12 6c0-3 4-3 3 0M14 8c3 0 3 4 0 3M12 10c0 3-4 3-3 0M10 8c-3 0-3-4 0-3M12 10v11M12 17c-2 0-4-1-5-3M12 19c2 0 4-1 5-3"/>',
+  watch:'<rect x="7" y="7" width="10" height="10" rx="3"/><path d="M9 7l1-4h4l1 4M9 17l1 4h4l1-4M12 10v2l1.5 1"/>',
+  cup:'<path d="M5 9h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM16 11h1.5a2 2 0 0 1 0 4H16M8 3c0 1.5 1 1.5 1 3M12 3c0 1.5 1 1.5 1 3"/>',
+  bottle:'<path d="M10 2h4v4l1.5 3v12a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1V9L10 6zM8.5 13h7"/>',
+  plant:'<path d="M8 21h8l1-6H7zM12 15V9M12 9c0-3 3-5 6-5 0 3-2 5-6 5zM12 11c0-2-2-4-5-4 0 2 2 4 5 4z"/>',
+  towel:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 15h14M5 18h14"/>',
+  pot:'<path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM2 12h2M20 12h2M9 10V8h6v2M12 6V5"/>',
+  ticket:'<path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v8a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2zM14 6v2M14 11v2M14 16v2"/>',
+  frame:'<rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 16l5-5 4 4 2-2 5 5"/><circle cx="15" cy="9" r="1.5"/>',
+  pen:'<path d="M16 3l5 5L9 20H4v-5zM13 6l5 5"/>',
+  shirt:'<path d="M8 3L3 6l2 4 2-1v12h10V9l2 1 2-4-5-3c0 2-2 3-4 3S8 5 8 3z"/>',
+  letter:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  drop:'<path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/>',
+  necklace:'<path d="M5 3c0 7 3 10 7 10s7-3 7-10M12 13v2"/><path d="M12 15l2 3-2 3-2-3z"/>',
+  wallet:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 14h2"/>',
+  star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  house:'<path d="M3 11l9-7 9 7M5 10v10h14V10M10 20v-5h4v5"/>',
+  tie:'<path d="M10 3h4l-1 3 2 10-3 4-3-4 2-10z"/>',
+  sweets:'<path d="M4 12h16l-2 8H6zM6 12a6 6 0 0 1 12 0M12 6V4"/>',
+  headphone:'<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/>',
+  lipstick:'<path d="M9 21h6v-9H9zM9 12V8l4-4v8"/>',
+  box:'<path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/>',
+  sparkle:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6"/>',
+  // 画面用
+  home:'<path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+  heart:'<path d="M12 20s-7.5-4.6-7.5-10.3A4.2 4.2 0 0 1 12 7.2a4.2 4.2 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>',
+  cart:'<path d="M3 4h2.5l2.2 11h10.6L20.5 7H7"/><circle cx="9" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  chev:'<path d="M9 5l7 7-7 7"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  minus:'<path d="M5 12h14"/>',
+  receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/>',
+  coin:'<circle cx="12" cy="12" r="8"/><path d="M9 9l3 4 3-4M12 13v4M9.5 14h5"/>',
+  ribbon:'<path d="M12 10c-2-4-7-5-7-2s5 2 7 2zm0 0c2-4 7-5 7-2s-5 2-7 2zM12 10l-3 10M12 10l3 10"/>',
+  name:'<path d="M4 20h16M6 16l6-12 6 12M8.5 11h7"/>',
+  leaf:'<path d="M5 19C5 10 11 5 20 4c0 9-5 15-14 15M5 19l7-7"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  flame:'<path d="M12 21c-4 0-7-2.8-7-6.6 0-3.4 2.6-5.2 3.8-8.4.4 2 1.6 3.2 2.7 3.6C11.6 6.2 13.4 4 15.5 3c-.6 2.8.4 4.6 1.9 6.4 1.2 1.4 1.6 3 1.6 5 0 3.8-3 6.6-7 6.6z"/>',
+  play:'<path d="M8 5l11 7-11 7z"/>',
+};
+const ic = (n, cls="i") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n]||P.gift}</svg>`;
+
+// ================= データ =================
+// シーン（h は色相：サムネイルの色）
+const SCENES = [
+  {id:"birthday", name:"誕生日",        sub:"特別な1日をもっと特別に",   icon:"cake",   h:340},
+  {id:"keiro",    name:"敬老の日",      sub:"感謝の気持ちを込めて",       icon:"flower", h:28},
+  {id:"wedding",  name:"結婚祝い",      sub:"ふたりの新しいスタートに",   icon:"rings",  h:300},
+  {id:"birth",    name:"出産祝い",      sub:"これからの幸せを願って",     icon:"baby",   h:205},
+  {id:"seasonal", name:"お中元・お歳暮",sub:"一年の感謝を込めて",         icon:"box",    h:150},
+  {id:"mother",   name:"母の日",        sub:"いつもありがとうを伝えて",   icon:"flower", h:355},
+  {id:"father",   name:"父の日",        sub:"照れくさい感謝をカタチに",   icon:"tie",    h:220},
+  {id:"retire",   name:"退職・送別",    sub:"おつかれさまの気持ちを",     icon:"leaf",   h:95},
+  {id:"house",    name:"新築・引越し",  sub:"新しい暮らしのお祝いに",     icon:"house",  h:45},
+  {id:"other",    name:"お祝い・その他",sub:"合格・就職・昇進などに",     icon:"star",   h:262},
+  // ここから追加したシーン（pick：定番ギフトの中から、商品名で当てはまるものを選ぶ）
+  {id:"xmas",     name:"クリスマス",    sub:"大切な人へ冬の贈り物",       icon:"star",   h:140, pick:/ネックレス|腕時計|イヤホン|コスメ|スピーカー|タルト|ひざ掛け/},
+  {id:"valentine",name:"バレンタイン",  sub:"気持ちを伝えるきっかけに",   icon:"heart",  h:345, pick:/タルト|コーヒー|名刺入れ|財布|ワイン|お菓子/},
+  {id:"whiteday", name:"ホワイトデー",  sub:"もらった気持ちにお返しを",   icon:"sweets", h:200, pick:/タルト|ハンドクリーム|コスメ|リップ|入浴剤|フレグランス|花束/},
+  {id:"kanreki",  name:"還暦・長寿祝い",sub:"節目の年に感謝を込めて",     icon:"sparkle",h:0,   pick:/ワイン|日本酒|体験|フォトフレーム|マッサージ|ひざ掛け|うなぎ|名入れ/},
+  {id:"school",   name:"入学・卒業祝い",sub:"新しい一歩を応援して",       icon:"pen",    h:210, pick:/ボールペン|腕時計|イヤホン|名刺入れ|カタログ/},
+  {id:"seijin",   name:"成人祝い",      sub:"大人の仲間入りをお祝い",     icon:"necklace",h:290,pick:/腕時計|ネックレス|名刺入れ|財布|ワイン|ボールペン/},
+  {id:"open",     name:"開店・開業祝い",sub:"新しいお店の門出に",         icon:"plant",  h:100, pick:/観葉植物|花束|カタログ/},
+  {id:"anniv",    name:"記念日",        sub:"恋人・夫婦の大切な日に",     icon:"rings",  h:330, pick:/ペア|体験|ネックレス|腕時計|花束|ワイン/},
+  {id:"uchi",     name:"内祝い・お返し",sub:"いただいたお祝いへのお礼",   icon:"box",    h:30,  pick:/タオル|カタログ|タルト|お菓子|コーヒー|緑茶|そうめん|ハム/},
+  {id:"mimai",    name:"お見舞い・快気祝い",sub:"早く元気になってね",     icon:"drop",   h:180, pick:/フルーツ|入浴剤|緑茶|お菓子|カタログ/},
+  {id:"temiyage", name:"手土産",        sub:"訪問先へのちょっとした品",   icon:"sweets", h:35,  pick:/タルト|お菓子|コーヒー|緑茶|和菓子/},
+  {id:"thanks",   name:"お礼・プチギフト",sub:"気軽に「ありがとう」を",   icon:"letter", h:250, pick:/ハンドクリーム|入浴剤|コーヒー|お菓子|緑茶/},
+];
+// シーンのグループ（シーン一覧の見出し）
+const SCENE_GROUPS = [
+  ["季節のイベント", ["xmas","valentine","whiteday","mother","father","keiro","seasonal"]],
+  ["人生のお祝い",   ["birthday","wedding","birth","school","seijin","kanreki","house","open","retire","other"]],
+  ["日常・お礼",     ["anniv","uchi","mimai","temiyage","thanks"]],
+];
+// シーンの写真を楽天で探すときの言葉
+const SCENE_KW = {birthday:"誕生日プレゼント", keiro:"敬老の日 ギフト", wedding:"結婚祝い ペア", birth:"出産祝い ベビー服 ギフトセット", seasonal:"お歳暮 ギフト", mother:"母の日 ギフト", father:"父の日 ギフト", retire:"退職祝い 花束", house:"新築祝い ギフト", other:"就職祝い 名刺入れ",
+  xmas:"クリスマスプレゼント", valentine:"バレンタイン チョコ ギフト", whiteday:"ホワイトデー お返し", kanreki:"還暦祝い プレゼント",
+  school:"入学祝い プレゼント", seijin:"成人祝い プレゼント", open:"開店祝い 胡蝶蘭", anniv:"記念日 プレゼント 恋人",
+  uchi:"内祝い ギフト", mimai:"快気祝い ギフト", temiyage:"手土産 お菓子 個包装", thanks:"プチギフト お礼"};
+const HOME_SCENES = ["birthday","xmas","wedding","birth","seasonal","kanreki","uchi","temiyage","other"];
+
+// 場面ごとの相場とマナー
+const MANNERS = {
+  birthday:{price:"友人 3,000〜5,000円／恋人 1〜3万円／親 5,000〜1万円", ok:"相手の好みが最優先。迷ったら消えもの（食べ物・コスメ）が無難", ng:"高すぎる物は相手が気をつかうので注意"},
+  keiro:{price:"3,000〜1万円（9月第3月曜日）", ok:"体にやさしい食べ物、花、写真入りの品、一緒に過ごす時間", ng:"杖や老眼鏡など「老い」を感じさせる物は、本人が望んだときだけに"},
+  wedding:{price:"友人 1〜3万円／同僚 5,000〜1万円", ok:"ペアの食器、カタログギフト、上質なタオルなど二人で使える物", ng:"包丁・ハサミ（縁を切る）。割れ物を嫌う人も。数は「4」「9」を避ける"},
+  birth:{price:"友人 5,000〜1万円／親族 1〜3万円", ok:"少し大きめの服、おむつケーキ、ママへのごほうび。生後7日〜1か月頃に", ng:"出産直後の訪問。新生児サイズの服はすぐ着られなくなる"},
+  seasonal:{price:"3,000〜5,000円（お中元 7月上旬〜15日頃／お歳暮 12月上旬〜20日頃）", ok:"ビール、ハム、そうめん、果物など家族で分けられる物", ng:"相手が喪中でも贈ってよいが、紅白の水引は避け無地ののしに"},
+  mother:{price:"3,000〜1万円（5月第2日曜日）", ok:"カーネーション、スイーツ、日常で使える上質な小物", ng:"白いカーネーションは亡くなった母に贈る花とされる"},
+  father:{price:"3,000〜1万円（6月第3日曜日）", ok:"お酒、グルメ、名入れの品、趣味の道具", ng:"お酒が飲めるかは事前に確認を"},
+  retire:{price:"個人 3,000〜5,000円／部署でまとめて 1〜3万円", ok:"花束、名入れの品、職場で配れる個包装のお菓子", ng:"目上の人に履物・靴下（踏みつける）や時計・文房具（もっと働け）を気にする人も"},
+  house:{price:"友人 5,000〜1万円／親族 1〜3万円", ok:"観葉植物、上質なタオル、グルメ、カタログギフト", ng:"新築祝いではライター・灰皿・赤い物など火を連想させる物を避ける"},
+  other:{price:"合格・入学 5,000〜1万円／就職 1〜3万円／昇進 5,000〜1万円", ok:"新生活で長く使える物（名刺入れ、ペン、腕時計など）", ng:"特になし。現金や商品券は目上の人には失礼にあたることも"},
+  xmas:{price:"恋人 1〜3万円／友人 3,000〜5,000円／子ども 3,000〜1万円", ok:"アクセサリー、スイーツ、マフラーや手袋などの冬小物", ng:"特になし。12月24日までに届くよう早めに注文を"},
+  valentine:{price:"本命 3,000〜1万円／友チョコ・職場 500〜1,500円", ok:"チョコレート、焼き菓子、相手の好きなお酒", ng:"職場で高価すぎる物は、お返しの負担になる"},
+  whiteday:{price:"もらった物と同じくらい〜1.5倍", ok:"スイーツ、ハンドクリームなどの小物、花", ng:"お菓子の種類に意味があるという説（マシュマロは「嫌い」など）を気にする人も"},
+  kanreki:{price:"1〜3万円（子どもから親へは3〜5万円も）", ok:"還暦は「赤」の物、名入れの品、旅行や食事の体験", ng:"「老い」を感じさせる物。古希・喜寿は紫、米寿は金茶など、お祝いの色にも意味がある"},
+  school:{price:"親族 5,000〜1万円／知人 3,000〜5,000円", ok:"文房具、腕時計、図書カード", ng:"学用品は家族が準備済みのこともあるので、事前に確認すると安心"},
+  seijin:{price:"親族 1〜3万円", ok:"名入れの品、アクセサリー、腕時計、名刺入れ", ng:"特になし"},
+  open:{price:"1〜3万円", ok:"胡蝶蘭、観葉植物、名入れの品", ng:"火事を連想させる赤い物、ライター、灰皿"},
+  anniv:{price:"5,000〜3万円", ok:"ペアの品、食事や旅行の体験、花", ng:"特になし。二人の思い出に合う物を"},
+  uchi:{price:"いただいたお祝いの半額〜3分の1", ok:"お菓子などの消えもの、カタログギフト、タオル", ng:"高すぎるお返しはかえって失礼。のしは「内祝」で"},
+  mimai:{price:"お見舞い 3,000〜5,000円／快気祝い いただいた額の半額〜3分の1", ok:"果物やお菓子などの消えもの（「病気が残らない」）", ng:"鉢植え（根付く＝寝付く）、香りの強い花、シクラメンや菊"},
+  temiyage:{price:"1,000〜3,000円", ok:"個包装で日持ちするお菓子。訪問先の人数に合わせる", ng:"訪問先の近くの店で買うと「間に合わせ」と思われることも"},
+  thanks:{price:"500〜3,000円", ok:"プチギフト、消えもの", ng:"相手が気をつかうほど高価な物"},
+};
+
+// 検索のカテゴリー
+// rk: 楽天で探すときの言葉 / re: 商品名で当てはめる条件 / f: 特徴（n=名入れ）
+const CATS = [
+  {id:"food",      name:"食品・スイーツ",       rk:"スイーツ ギフト"},
+  {id:"drink",     name:"お酒・ドリンク",       rk:"お酒 ギフト"},
+  {id:"coffee",    name:"コーヒー・お茶",       rk:"コーヒー 紅茶 ギフト", re:/コーヒー|茶/},
+  {id:"fruit",     name:"フルーツ・グルメ",     rk:"高級フルーツ ギフト", re:/フルーツ|うなぎ|ハム|牛/},
+  {id:"zakka",     name:"雑貨・インテリア",     rk:"インテリア雑貨 ギフト"},
+  {id:"kitchen",   name:"キッチン・食器",       rk:"食器 ギフト", re:/グラス|鍋|食器|マグ|湯のみ/},
+  {id:"fash",      name:"ファッション",         rk:"ファッション小物 ギフト"},
+  {id:"acc",       name:"アクセサリー・時計",   rk:"アクセサリー ギフト", re:/腕時計|ネックレス|アクセサリー/},
+  {id:"leather",   name:"財布・革小物",         rk:"革小物 ギフト", re:/財布|名刺入れ|キーケース/},
+  {id:"beauty",    name:"美容・コスメ",         rk:"コスメ ギフト"},
+  {id:"relax",     name:"健康・リラックス",     rk:"リラックスグッズ ギフト", re:/マッサージ|入浴|バス|ひざ掛け|フレグランス/},
+  {id:"tech",      name:"家電・ガジェット",     rk:"ガジェット プレゼント"},
+  {id:"flower",    name:"お花・植物",           rk:"花 ギフト"},
+  {id:"baby",      name:"ベビー・キッズ",       rk:"出産祝い ギフト", re:/ベビー|おむつ/},
+  {id:"name",      name:"名入れギフト",         rk:"名入れ ギフト", f:"n"},
+  {id:"stationery",name:"文房具",               rk:"高級ボールペン ギフト", re:/ペン/},
+  {id:"exp",       name:"体験・カタログギフト", rk:"カタログギフト"},
+];
+const catMatch = (c, g) => g.cat === c.id || (c.re && c.re.test(g.name)) || (c.f && g.f.includes(c.f));
+// 予算の選択肢（円）
+const PRICES = [1000,2000,3000,5000,7000,10000,15000,20000,30000,50000,100000,200000];
+const PRICE_QUICK = [["〜3千円","",3000],["3千〜5千円",3000,5000],["5千〜1万円",5000,10000],["1万〜3万円",10000,30000],["3万〜5万円",30000,50000],["5万円〜",50000,""]];
+
+// 贈り物データ
+// occ: 合う場面 / rel: 合う相手 / g: 性別の向き(m/f) / f: n=名入れ w=ラッピング k=消えもの / b: 1=人気 2=おすすめ
+const GIFTS = [
+  ["メンズ腕時計（名入れ対応）","fash",33000,"watch",220,["birthday","father","other"],["partner","parent","friend"],"m","nw",1,"シンプルで上品なデザインの腕時計。裏ぶたに名前や日付を刻めば特別感のある贈り物に。"],
+  ["フルーツタルトの詰め合わせ（4個入り）","food",4320,"sweets",28,["birthday","mother","keiro","seasonal","house"],["friend","parent","grand","work"],"","wk",2,"見た目が華やかで箱を開けた瞬間に喜ばれる。日持ちが短いので届ける日に注意。"],
+  ["ドリップコーヒーのギフトセット","food",3980,"cup",28,["birthday","seasonal","retire","house","father"],["friend","parent","work"],"","wk",1,"1杯ずつ淹れられる個包装タイプ。コーヒー好きなら誰にでも贈りやすい。"],
+  ["コードバンの二つ折り財布（名入れ対応）","fash",16500,"wallet",20,["birthday","father","other"],["partner","parent"],"m","nw",2,"使うほど艶が出る革の財布。イニシャルの刻印で長く使ってもらえる一品に。"],
+  ["季節の花束（ブーケ）","flower",5500,"flower",355,["birthday","mother","keiro","retire","wedding","other"],["friend","partner","parent","grand","work"],"","w",1,"場面を選ばない華やかな贈り物。アレンジメントにすれば花瓶がいらない。"],
+  ["ワイヤレスイヤホン","tech",15000,"headphone",220,["birthday","other"],["partner","friend"],"","w",2,"通勤や運動で毎日使える。相手のスマホに合う物を選ぶと安心。"],
+  ["ちょっといいハンドクリームのセット","beauty",3000,"drop",340,["birthday","mother","retire"],["friend","partner","parent","work"],"f","wk",1,"毎日使えて好みが分かれにくい。香りは控えめな物が無難。"],
+  ["ブランドリップ・口紅","beauty",4500,"lipstick",340,["birthday"],["partner","friend"],"f","w",0,"自分ではなかなか買わない色に挑戦できる。限定色は特別感が出る。"],
+  ["入浴剤・バスギフトのセット","beauty",3000,"drop",205,["birthday","retire","mother","birth"],["friend","work","parent"],"","wk",0,"「ゆっくり休んでね」という気持ちが伝わる消えもの。"],
+  ["名入れのペアグラス","zakka",6000,"cup",262,["wedding","house","father","birthday"],["friend","parent","partner"],"","nw",1,"名前や記念日を入れられる。届くまで1週間ほどかかることが多い。"],
+  ["今治タオルのギフトセット","zakka",5000,"towel",205,["wedding","house","birth","keiro","seasonal"],["friend","parent","grand","work"],"","w",1,"何枚あっても困らない実用品。質の良さが伝わりやすい。"],
+  ["鋳物ホーロー鍋","zakka",28000,"pot",20,["wedding","house"],["friend","parent"],"","w",2,"自分では買いにくい少し高価な物。料理好きの二人に。"],
+  ["カタログギフト","exp",10000,"box",150,["wedding","birth","house","retire","seasonal"],["friend","parent","grand","work"],"","w",1,"相手が自分で選べるので失敗がない。予算に合わせてコースを選べる。"],
+  ["体験ギフト（レストラン・スパ・旅行）","exp",20000,"ticket",150,["wedding","birthday","retire","keiro","mother","father"],["partner","parent","grand","friend"],"","",2,"物ではなく思い出を贈る。日程を相手が決められるので便利。"],
+  ["おむつケーキ","zakka",6000,"cake",205,["birth"],["friend","work"],"","nw",1,"見た目がかわいく、中のおむつは実用的。名前入りも選べる。"],
+  ["ベビー服（80サイズ）","fash",5000,"shirt",205,["birth"],["friend","work","parent"],"","w",0,"少し大きめなら長く着られて、他の人とかぶりにくい。"],
+  ["名入れのベビー食器セット","zakka",7000,"baby",205,["birth"],["friend","parent"],"","nw",2,"離乳食で使える記念品。名前を聞いてから注文する。"],
+  ["孫の写真入りフォトフレーム","zakka",4000,"frame",28,["keiro"],["grand"],"","nw",1,"写真を入れて贈れば一番喜ばれる定番。デジタルフォトフレームも人気。"],
+  ["うなぎ・和菓子の詰め合わせ","food",5000,"sweets",45,["keiro","father","mother","seasonal"],["grand","parent"],"","wk",2,"食べやすく少し贅沢な食べ物は年配の方に喜ばれる。"],
+  ["高級緑茶と湯のみのセット","food",3500,"cup",95,["keiro","retire","house","mother"],["grand","parent","work"],"","wk",0,"毎日飲めて日持ちする。名入れの湯のみにしても。"],
+  ["軽くて暖かいひざ掛け","fash",6000,"towel",28,["keiro","mother","birthday"],["grand","parent","partner"],"","w",0,"季節を問わず冷房対策にも使える。肌ざわりの良い素材を。"],
+  ["ネックマッサージャー","tech",8000,"sparkle",220,["keiro","father","mother","birthday"],["grand","parent","partner"],"","w",1,"日ごろの疲れをいたわる気持ちが伝わる。"],
+  ["ネックレス・アクセサリー","fash",20000,"necklace",340,["birthday","other"],["partner"],"f","w",1,"恋人への誕生日の定番。普段つけている物の雰囲気に合わせて。"],
+  ["プチプラコスメのセット","beauty",3000,"lipstick",340,["birthday"],["friend"],"f","wk",0,"友人同士で気軽に贈れる。限定パッケージを選ぶと特別感が出る。"],
+  ["地酒・クラフトビールの飲み比べセット","drink",4500,"bottle",45,["birthday","father","retire","house","seasonal"],["friend","parent","work"],"","wk",1,"お酒好きの人に。相手の出身地の物を選ぶと話が広がる。"],
+  ["生まれ年のヴィンテージワイン","drink",15000,"bottle",340,["birthday","father","other"],["partner","parent"],"","w",2,"20歳・30歳・還暦など節目の誕生日にぴったり。"],
+  ["名入れラベルの日本酒","drink",8000,"bottle",45,["father","retire","keiro","other"],["parent","grand","work"],"m","nwk",0,"メッセージ入りのラベルにできる。お酒好きの父・祖父に。"],
+  ["ハムの詰め合わせ","food",5000,"box",20,["seasonal"],["parent","grand","work"],"","wk",1,"お中元・お歳暮の定番。家族の多い家にも喜ばれる。"],
+  ["ビールの詰め合わせ","drink",4500,"bottle",45,["seasonal","father"],["parent","work"],"","wk",1,"夏のお中元の代表格。お酒を飲まない家には別の物を。"],
+  ["高級そうめん","food",3500,"box",95,["seasonal"],["parent","grand","work"],"","wk",0,"夏のお中元に。日持ちがして家族で食べられる。"],
+  ["高級フルーツ（シャインマスカットなど）","food",6000,"leaf",95,["keiro","mother","birth","house","seasonal"],["grand","parent","friend"],"","k",2,"旬の果物は季節感があり、年代を問わず喜ばれる。"],
+  ["観葉植物（パキラ・モンステラ）","flower",8000,"plant",95,["house","retire","other"],["friend","work","parent"],"","w",1,"新しい部屋に置きやすい。育てやすい品種を選ぶと喜ばれる。"],
+  ["カーネーションの鉢植え","flower",4000,"flower",355,["mother"],["parent"],"f","w",1,"母の日の王道。鉢植えなら長く楽しめる。"],
+  ["革の名刺入れ（名入れ対応）","fash",9000,"wallet",20,["other","retire","birthday"],["work","friend","partner"],"","nw",2,"就職や昇進のお祝いに。イニシャルの刻印で特別な一品に。"],
+  ["名入れのボールペン","zakka",6000,"pen",262,["other","retire","birthday"],["work","friend"],"","nw",0,"仕事で使える上質な一本。目上の人には避ける考え方もある。"],
+  ["職場で配れる個包装のお菓子","food",3000,"sweets",28,["retire"],["work"],"","wk",1,"退職する側が配るときにも、送る側が贈るときにも使える。"],
+  ["ルームフレグランス・ディフューザー","zakka",5500,"drop",262,["house","birthday"],["friend","partner"],"","w",0,"部屋の雰囲気を変えられる。香りは柑橘やウッド系が無難。"],
+  ["Bluetoothスピーカー","tech",6000,"headphone",220,["house","birthday","other"],["friend","partner"],"","w",0,"新しい部屋で音楽を楽しめる。防水タイプならお風呂でも。"],
+  ["似顔絵ウェルカムボード","zakka",8000,"frame",300,["wedding"],["friend"],"","n",0,"結婚式で飾れて、その後も記念に残る。早めの注文が必要。"],
+  ["ペアのパジャマ","fash",12000,"shirt",300,["wedding"],["friend"],"","w",0,"新婚の二人へのくすっと笑える贈り物。"],
+].map((a,i) => ({id:i, name:a[0], cat:a[1], price:a[2], icon:a[3], h:a[4], occ:a[5], rel:a[6], g:a[7], f:a[8], b:a[9], why:a[10]}));
+
+const RELS = [["friend","友人"],["partner","恋人"],["parent","両親"],["grand","祖父母"],["work","職場の人"]];
+const BUDS = [["b1","〜3,000円",0,3000],["b2","3,000〜5,000円",3000,5000],["b3","5,000〜10,000円",5000,10000],["b4","10,000円〜",10000,Infinity]];
+const yen = n => "¥" + n.toLocaleString("ja-JP");
+
+// ================= 保存（このブラウザの中だけ） =================
+function load(k, d){ try { const v = localStorage.getItem("giftly-"+k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+function save(k, v){ try { localStorage.setItem("giftly-"+k, JSON.stringify(v)); } catch(e){} }
+let favs = load("favs", []);
+// ほしいものリスト
+//   定番ギフト … {k:"g:番号", type:"g", id}
+//   楽天の商品 … {k:"r:商品URL", type:"r", name, price, url, img, shop}
+let wish = load("wish", []);
+const inWish = k => wish.some(w => w.k === k);
+function toggleWish(item){
+  const has = inWish(item.k);
+  wish = has ? wish.filter(w => w.k !== item.k) : [item, ...wish];
+  save("wish", wish);
+  toast(has ? "ほしいものリストから外しました" : "ほしいものリストに追加しました");
+  return !has;
+}
+
+// ================= 画面の移動 =================
+// stack に画面を積んで「戻る」で1つ前に戻る
+let stack = [{s: load("started", false) ? "home" : "splash"}];
+const cur = () => stack[stack.length-1];
+function go(s, p={}){ stack.push({s, ...p}); render(true); }
+function back(){ if (stack.length > 1) stack.pop(); render(true); }
+function tab(s){ stack = [{s}]; render(true); }
+
+// 検索・診断の条件（画面をまたいで覚えておく）
+const q = {kw:"", min:"", max:"", cat:"", wrap:""};
+// 検索条件の予算（下限と上限が逆なら入れかえる）
+function qRange(){
+  const a = +q.min || 0, b = q.max === "" ? Infinity : +q.max;
+  return a <= b ? [a, b] : [b, a];
+}
+// 検索条件 → 楽天で探すときの条件
+function searchParams(){
+  const c = CATS.find(x => x.id === q.cat), [lo, hi] = qRange();
+  const p = {keyword: [q.kw.trim(), c && c.rk].filter(Boolean).join(" ") || "ギフト"};
+  if (lo > 0) p.minPrice = lo;
+  if (hi < Infinity) p.maxPrice = hi;
+  if (q.wrap === "yes") p.giftFlag = 1;
+  return p;
+}
+
+// ================= 表示の設定（ライト・ダーク） =================
+function applyTheme(){
+  const t = load("theme", "auto");
+  if (t === "auto") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = t;
+}
+applyTheme();
+
+// ================= 記念日とイベント =================
+const WEEK = "日月火水木金土";
+const fmtDate = d => `${d.getMonth()+1}月${d.getDate()}日（${WEEK[d.getDay()]}）`;
+let annivs = load("annivs", []);   // [{id, name, m, d, s}]
+// これからのイベント（決まった行事＋自分で登録した記念日）を近い順に
+function upcoming(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const nth = (y,m,wd,n) => { const d = new Date(y,m,1); const off = (wd - d.getDay() + 7) % 7; return new Date(y,m,1+off+7*(n-1)); };
+  const evs = y => [
+    {n:"バレンタイン", d:new Date(y,1,14), s:"valentine"},
+    {n:"ホワイトデー", d:new Date(y,2,14), s:"whiteday"},
+    {n:"母の日", d:nth(y,4,0,2), s:"mother"},
+    {n:"父の日", d:nth(y,5,0,3), s:"father"},
+    {n:"お中元", d:new Date(y,6,1), s:"seasonal"},
+    {n:"敬老の日", d:nth(y,8,1,3), s:"keiro"},
+    {n:"お歳暮", d:new Date(y,11,1), s:"seasonal"},
+    {n:"クリスマス", d:new Date(y,11,25), s:"xmas"},
+    ...annivs.map(a => ({n:a.name, d:new Date(y,a.m-1,a.d), s:a.s || "", kw:a.s ? "" : "プレゼント ギフト", mine:true})),
+  ];
+  const y = now.getFullYear();
+  return [...evs(y), ...evs(y+1)].filter(e => e.d >= now).sort((a,b) => a.d - b.d)
+    .map(e => ({...e, days: Math.round((e.d - now)/86400000), label: `${e.d.getMonth()+1}月${e.d.getDate()}日`}));
+}
+const evKw = e => e.s ? SCENE_KW[e.s] : e.kw;
+const evAttrs = e => e.s ? `data-act="scene" data-id="${e.s}"` : `data-act="kwsearch" data-q="${esc(e.kw)}"`;
+const r = {g:"", rel:"", occ:"", bud:""};
+let sortMode = "pop";
+
+// ================= 部品 =================
+const isFav = id => favs.includes(id);
+function heartBtn(g, cls="heart"){
+  return `<button class="${cls} ${isFav(g.id)?"on":""}" data-act="fav" data-id="${g.id}" aria-label="お気に入り" aria-pressed="${isFav(g.id)}">${ic("heart")}</button>`;
+}
+function thumb(g, extra=""){
+  const badge = g.b===1 ? `<span class="badge">人気</span>` : g.b===2 ? `<span class="badge rec">おすすめ</span>` : "";
+  return `<div class="thumb ${extra}" style="--h:${g.h}" data-photo="${g.id}">${badge}${ic(g.icon)}</div>`;
+}
+function pcard(g){
+  return `<div class="pcard" style="position:relative">
+    <button class="pcard" data-act="detail" data-id="${g.id}" style="width:100%">
+      ${thumb(g)}<span class="nm">${g.name}</span><span class="pr">${yen(g.price)}</span>
+    </button>${heartBtn(g)}</div>`;
+}
+function bar(title, right=""){
+  return `<div class="bar pad"><button class="iconbtn" data-act="back" aria-label="戻る">${ic("back")}</button><h1>${title}</h1><div>${right}</div></div>`;
+}
+const wishInner = () => `${ic("gift")}${wish.length ? `<span class="dot">${wish.length}</span>` : ""}`;
+const wishBtn = () => `<button class="iconbtn wishbtn" data-act="go" data-s="wish" aria-label="ほしいものリスト">${wishInner()}</button>`;
+function sorted(list){
+  if (sortMode==="low") return [...list].sort((a,b)=>a.price-b.price);
+  if (sortMode==="high") return [...list].sort((a,b)=>b.price-a.price);
+  return [...list].sort((a,b)=>(a.b||9)-(b.b||9));
+}
+function gridOrEmpty(list, msg){
+  return list.length ? `<div class="pgrid">${sorted(list).map(pcard).join("")}</div>`
+    : `<div class="empty">${ic("gift")}<div>${msg}</div></div>`;
+}
+const sortBar = () => `<div class="sortbar">${[["pop","人気順"],["low","価格が安い順"],["high","価格が高い順"]].map(([k,n])=>`<button class="pill" data-act="sort" data-v="${k}" aria-pressed="${sortMode===k}">${n}</button>`).join("")}</div>`;
+
+
+// ================= 各画面 =================
+const V = {};
+
+V.splash = () => `<div class="splash pad">
+  ${ic("gift")}
+  <div class="logo">Giftly</div>
+  <p>想いをカタチに、<br>ぴったりのギフトを。</p>
+  <button class="primary" data-act="start">はじめる</button>
+</div>`;
+
+V.home = () => {
+  const evs = upcoming(), ev = evs[0];
+  const popular = GIFTS.filter(g=>g.b===1).slice(0,8);
+  const left = e => e.days === 0 ? "今日！" : `あと${e.days}日`;
+  return `<div class="bar pad" style="grid-template-columns:1fr 44px"><div class="logo">Giftly</div>${wishBtn()}</div>
+  <div class="pad">
+    <div class="today">今日は <b>${fmtDate(new Date())}</b></div>
+    <button class="searchbox" data-act="go" data-s="search">${ic("search")}<span>キーワードで探す（例：コーヒー、名入れ、スイーツ）</span></button>
+    <button class="hero" ${evAttrs(ev)}>
+      <b>${ev.days === 0 ? `今日は${esc(ev.n)}！` : `${esc(ev.n)}まで<br>あと${ev.days}日`}</b>
+      <small>${ev.label}　${ev.s || ev.kw ? "おすすめのギフトを見る →" : ""}</small>
+      ${ic("gift")}
+      <span class="hero-ph" data-kw="${esc(evKw(ev))}"></span>
+    </button>
+    <div class="sec"><h2>これからの予定</h2><button class="more" data-act="go" data-s="annivs">記念日を登録 ›</button></div>
+    <div class="evs">
+      ${evs.slice(1,8).map(e => `<button class="ev" ${evAttrs(e)}><span class="dt">${e.label}${e.mine ? "・記念日" : ""}</span><b>${esc(e.n)}</b><span class="left">${left(e)}</span></button>`).join("")}
+      <button class="ev add" data-act="go" data-s="annivs">${ic("plus")}<span>誕生日や記念日を追加</span></button>
+    </div>
+    ${RK.ready() ? `<div class="sec"><h2>いま話題のプレゼント</h2><button class="more" data-act="tab" data-s="trend">もっと見る ›</button></div>
+    <div id="hometrend"></div>` : ""}
+    <div class="sec"><h2>シーンから探す</h2><button class="more" data-act="go" data-s="scenes">すべて見る ›</button></div>
+    <div class="scenes">${HOME_SCENES.map(id=>{const s=SCENES.find(x=>x.id===id);return `<button class="scene" style="--h:${s.h}" data-act="scene" data-id="${s.id}"><span class="sc-ph" data-kw="${SCENE_KW[s.id]}">${ic(s.icon)}</span>${s.name}</button>`}).join("")}</div>
+    <button class="diag" data-act="go" data-s="recommend"><span class="ic">${ic("sparkle")}</span><span><b>おすすめ診断</b><span>相手とシーンを選ぶだけで、ぴったりの候補を提案します</span></span></button>
+    ${RK.ready() ? `
+    <div class="sec"><h2>人気ギフトランキング</h2><button class="more" data-act="go" data-s="ranking">すべて見る ›</button></div>
+    <div class="sortbar">${rankPills()}</div>
+    <div class="hscroll" id="rankrow"></div>
+    <p class="note" id="rankupd" style="margin-top:4px"></p>`
+    : `<div class="sec"><h2>人気のギフト</h2><button class="more" data-act="list" data-kind="popular">すべて見る ›</button></div>
+    <div class="hscroll">${popular.map(pcard).join("")}</div>`}
+  </div>`;
+};
+
+V.scenes = () => `${bar("シーンを選ぶ")}<div class="pad slist">
+  ${SCENE_GROUPS.map(([gname, ids]) => `<div class="label" style="margin:14px 0 2px">${gname}</div>` + ids.map(id => {
+    const s = SCENES.find(x => x.id === id);
+    return `<button class="srow" data-act="scene" data-id="${s.id}"><div class="thumb" style="--h:${s.h}" data-kw="${SCENE_KW[s.id]}">${ic(s.icon)}</div><div class="t"><b>${s.name}</b><span>${s.sub}</span></div>${ic("chev")}</button>`;
+  }).join("")).join("")}
+</div>`;
+
+V.scene = ({id}) => {
+  const s = SCENES.find(x=>x.id===id), m = MANNERS[id];
+  const list = GIFTS.filter(g => g.occ.includes(id) || (s.pick && s.pick.test(g.name)));
+  return `${bar(s.name+"ギフト", wishBtn())}<div class="pad">
+    ${sortBar()}
+    <details class="manner"><summary>${s.name}の相場とマナー <span>›</span></summary>
+      <dl><dt>相場</dt><dd>${m.price}</dd><dt>喜ばれる物</dt><dd>${m.ok}</dd><dt>注意</dt><dd>${m.ng}</dd></dl></details>
+    <div class="label" style="margin-top:0">定番ギフト</div>
+    ${gridOrEmpty(list,"候補がありません")}
+    ${RK.ready() ? shopList({keyword: SCENE_KW[id]}, `${s.name}の人気商品`) : ""}
+  </div>`;
+};
+
+V.detail = ({id}) => {
+  const g = GIFTS[id];
+  const sc = g.occ.map(o=>SCENES.find(s=>s.id===o).name).join("・");
+  const qs = encodeURIComponent(g.name.replace(/（.*?）/g," ")+" ギフト");
+  const f = (k,icon,label) => `<div class="feat ${g.f.includes(k)?"on":""}">${ic(icon)}${label}</div>`;
+  return `<div class="thumb dhero" style="--h:${g.h}" data-photo="${g.id}">${ic(g.icon)}
+    <div class="dtop"><button class="iconbtn" data-act="back" aria-label="戻る">${ic("back")}</button>${heartBtn(g,"iconbtn")}</div></div>
+  <div class="pad dbody">
+    <h2>${g.name}</h2>
+    <div class="dprice">${yen(g.price)} <small>前後（目安）</small></div>
+    <p style="margin:0">${g.why}</p>
+    <div class="feats">${f("n","name","名入れ可能")}${f("w","ribbon","ラッピング対応")}${f("k","leaf","消えもの")}</div>
+    <div class="tips"><b>こんな場面に：</b>${sc}</div>
+    <button class="primary" data-act="wishg" data-id="${g.id}">${inWish("g:"+g.id) ? "ほしいものリストに入っています ✓" : "ほしいものリストに追加"}</button>
+    <div class="links">
+      <a class="ghost" href="https://search.rakuten.co.jp/search/mall/${qs}/" target="_blank" rel="noopener">楽天で探す</a>
+      <a class="ghost" href="https://www.amazon.co.jp/s?k=${qs}" target="_blank" rel="noopener">Amazonで探す</a>
+    </div>
+    <p class="note" style="margin:0">価格はおおよその目安です。実際の商品はリンク先で確認してください。</p>
+    ${RK.ready() ? shopList(giftParams(g), "ショッピングサイトで見つかった商品") : ""}
+  </div>`;
+};
+
+V.search = () => {
+  const pill = (key,v,n) => `<button class="pill" data-act="q" data-k="${key}" data-v="${v}" aria-pressed="${q[key]===v}">${n}</button>`;
+  const opt = (v, sel, label) => `<option value="${v}" ${String(sel)===String(v)?"selected":""}>${label}</option>`;
+  return `${bar("検索条件")}<div class="pad">
+    <label class="searchbox" for="kw">${ic("search")}<input id="kw" type="search" placeholder="キーワードを入力" value="${esc(q.kw)}"></label>
+    <div class="label">予算</div>
+    <div class="range">
+      <select id="q-min" class="field" aria-label="予算の下限">${opt("",q.min,"下限なし")}${PRICES.map(p=>opt(p,q.min,yen(p))).join("")}</select>
+      <span>〜</span>
+      <select id="q-max" class="field" aria-label="予算の上限">${opt("",q.max,"上限なし")}${PRICES.map(p=>opt(p,q.max,yen(p))).join("")}</select>
+    </div>
+    <div class="pills" style="margin-top:10px">${PRICE_QUICK.map(([n,a,b])=>`<button class="pill" data-act="qr" data-min="${a}" data-max="${b}" aria-pressed="${String(q.min)===String(a) && String(q.max)===String(b)}">${n}</button>`).join("")}</div>
+    <label class="label" for="q-cat">カテゴリー</label>
+    <select id="q-cat" class="field">${opt("",q.cat,"すべてのカテゴリー")}${CATS.map(c=>opt(c.id,q.cat,c.name)).join("")}</select>
+    <div class="label">ラッピング</div><div class="pills grid2">${pill("wrap","yes","ラッピングあり")}${pill("wrap","no","こだわらない")}</div>
+    <div style="margin-top:26px"><button class="primary" data-act="list" data-kind="search">この条件で検索</button></div>
+  </div>`;
+};
+
+V.recommend = () => {
+  const pill = (key,v,n) => `<button class="pill" data-act="r" data-k="${key}" data-v="${v}" aria-pressed="${r[key]===v}">${n}</button>`;
+  return `${bar("あなたにおすすめのギフト")}<div class="pad">
+    <div class="intro"><span class="ic">${ic("sparkle")}</span><p>贈る相手のことや、<br>シーンを教えてください。<br>ぴったりのギフトを提案します！</p></div>
+    <div class="label">相手の性別</div><div class="pills grid3">${pill("g","m","男性")}${pill("g","f","女性")}${pill("g","","こだわらない")}</div>
+    <div class="label">相手との関係</div><div class="pills grid3">${RELS.map(x=>pill("rel",x[0],x[1])).join("")}</div>
+    <div class="label">シーン</div><div class="pills">${SCENES.map(s=>pill("occ",s.id,s.name)).join("")}</div>
+    <div class="label">予算</div><div class="pills grid2">${BUDS.map(b=>pill("bud",b[0],b[1])).join("")}</div>
+    <div style="margin-top:26px"><button class="primary" data-act="list" data-kind="recommend">おすすめを見つける</button></div>
+  </div>`;
+};
+
+V.list = ({kind}) => {
+  let title = "人気のギフト", list = [];
+  if (kind === "popular") list = GIFTS.filter(g=>g.b===1);
+  if (kind === "search") {
+    title = "検索結果";
+    const [lo, hi] = qRange(), c = CATS.find(x=>x.id===q.cat), kw = q.kw.trim();
+    list = GIFTS.filter(g => (!kw || (g.name+g.why).includes(kw)) && g.price>=lo && g.price<=hi && (!c || catMatch(c,g)) && (q.wrap!=="yes" || g.f.includes("w")));
+  }
+  if (kind === "recommend") {
+    title = "診断の結果";
+    const b = BUDS.find(x=>x[0]===r.bud);
+    // 点数をつけて高い順に並べる
+    list = GIFTS.filter(g => (!r.g || !g.g || g.g===r.g) && (!b || (g.price>=b[2] && g.price<b[3])) && (!r.occ || g.occ.includes(r.occ)))
+      .map(g => ({g, s:(r.rel && g.rel.includes(r.rel)?3:0) + (r.g && g.g===r.g?1:0) + (g.b?0.5:0)}))
+      .filter(x => !r.rel || x.s >= 3)
+      .sort((a,b)=>b.s-a.s).map(x=>x.g);
+    sortMode = sortMode || "pop";
+  }
+  const empty = kind==="recommend" ? "条件に合う候補がありません。予算やシーンを変えてみてください。" : "条件に合う候補がありません。条件を減らしてみてください。";
+  return `${bar(title, wishBtn())}<div class="pad">
+    ${kind==="search" && RK.ready() ? shopList(searchParams(), "ショッピングサイトの商品") + `<div class="label">定番ギフトから</div>` : ""}
+    <p style="margin:0 0 6px;color:var(--muted);font-size:12px">${list.length}件見つかりました</p>
+    ${kind==="recommend" ? "" : sortBar()}
+    ${list.length ? `<div class="pgrid">${(kind==="recommend"?list:sorted(list)).map(pcard).join("")}</div>` : `<div class="empty">${ic("gift")}<div>${empty}</div></div>`}
+  </div>`;
+};
+
+V.favs = () => {
+  const gifts = GIFTS.filter(g => isFav(g.id));
+  const vids = favx.filter(f => f.type === "v"), arts = favx.filter(f => f.type === "a");
+  // 動画は「紹介された商品」画面へ、記事はそのサイトへ
+  const xrow = f => `<div class="acard">${f.type === "v" ? `<button class="aopen" data-act="video" data-v="${esc(f.k.slice(2))}">` : `<a href="${esc(f.url)}" target="_blank" rel="noopener">`}
+      ${f.img ? `<img src="${esc(f.img)}" alt="" loading="lazy">` : `<span class="aimg">${ic("letter")}</span>`}
+      <span class="t"><span class="nm2">${esc(f.title)}</span><span class="meta">${esc(f.sub)}${f.type === "v" ? "・紹介商品を見る" : ""}</span></span>${f.type === "v" ? "</button>" : "</a>"}
+      ${favxBtn(f)}</div>`;
+  const none = !gifts.length && !favx.length;
+  return `<div class="bar pad" style="grid-template-columns:44px 1fr 44px"><div></div><h1>お気に入り</h1>${wishBtn()}</div><div class="pad">
+    ${none ? `<div class="empty">${ic("heart")}<div>まだお気に入りはありません。<br>ギフトや話題の動画・記事の♡を押すと、ここに集まります。</div><button class="pill" data-act="tab" data-s="trend">話題を見る</button></div>` : ""}
+    ${gifts.length ? `<div class="label" style="margin-top:4px">定番ギフト（${gifts.length}）</div>${gridOrEmpty(gifts, "")}` : ""}
+    ${vids.length ? `<div class="label">動画（${vids.length}）</div><div class="rklist">${vids.map(xrow).join("")}</div>` : ""}
+    ${arts.length ? `<div class="label">記事（${arts.length}）</div><div class="rklist">${arts.map(xrow).join("")}</div>` : ""}
+  </div>`;
+};
+
+// ほしいものリストの1行
+function wishRow(w){
+  const rm = `<button class="iconbtn" data-act="wrm" data-k="${esc(w.k)}" aria-label="リストから外す">${ic("trash")}</button>`;
+  if (w.type === "g") {
+    const g = GIFTS[w.id];
+    const qs = encodeURIComponent(g.name.replace(/（.*?）/g," ")+" ギフト");
+    return `<div class="citem"><button class="wthumb" data-act="detail" data-id="${g.id}" aria-label="${g.name}の詳細">${thumb({...g,b:0})}</button>
+      <div class="t"><span class="nm2">${g.name}</span><b>${yen(g.price)} <small style="font-weight:400;color:var(--muted)">前後</small></b>
+      <a class="buy ghostbuy" href="https://search.rakuten.co.jp/search/mall/${qs}/" target="_blank" rel="noopener">楽天で探す</a></div>${rm}</div>`;
+  }
+  return `<div class="citem"><img class="wimg" src="${esc(w.img)}" alt="" loading="lazy">
+    <div class="t"><span class="nm2">${esc(w.name)}</span><b>${yen(w.price)}</b><small class="odate">${esc(w.shop)}</small>
+    <a class="buy ${w.src === "y" ? "y" : ""}" href="${esc(w.url)}" target="_blank" rel="noopener">${(SOURCES[w.src] || SOURCES.r).buy}</a></div>${rm}</div>`;
+}
+
+V.wish = () => {
+  const total = wish.reduce((s,w) => s + (w.type === "g" ? GIFTS[w.id].price : w.price), 0);
+  return `${bar("ほしいものリスト")}<div class="pad">
+    ${wish.length ? `<p class="note" style="margin:0 0 4px">気になる商品をここにまとめて、比べてから楽天で購入できます。</p>
+      ${wish.map(wishRow).join("")}
+      <div class="total"><span>合計（目安）</span><b>${yen(total)}</b></div>
+      <p class="demo">購入は楽天市場のページで行います。価格や在庫はリンク先で確認してください。</p>`
+    : `<div class="empty">${ic("gift")}<div>ほしいものリストは空です。<br>商品の${ic("gift","i inl")}マークや「ほしいものリストに追加」で保存できます。</div><button class="pill" data-act="tab" data-s="home">ギフトを探す</button></div>`}
+  </div>`;
+};
+
+V.mypage = () => {
+  return `<div class="bar pad" style="grid-template-columns:44px 1fr 44px"><div></div><h1>マイページ</h1>${wishBtn()}</div><div class="pad">
+    <div class="prof"><div class="avatar">${ic("user")}</div><div><b style="font-size:16px">ゲスト</b><div style="font-size:12px;color:var(--muted)">このブラウザに保存されています</div></div></div>
+    <div class="menu">
+      <button class="mrow" data-act="go" data-s="wish">${ic("gift")}<span>ほしいものリスト</span><em>${wish.length}件</em>${ic("chev")}</button>
+      <button class="mrow" data-act="tab" data-s="favs">${ic("heart")}<span>お気に入り</span><em>${favs.length}件</em>${ic("chev")}</button>
+      <button class="mrow" data-act="go" data-s="recommend">${ic("sparkle")}<span>おすすめ診断</span>${ic("chev")}</button>
+      <button class="mrow" data-act="go" data-s="scenes">${ic("calendar")}<span>シーンから探す</span>${ic("chev")}</button>
+      <button class="mrow" data-act="go" data-s="annivs">${ic("calendar")}<span>誕生日・記念日</span><em>${annivs.length}件</em>${ic("chev")}</button>
+    </div>
+    <div class="label">設定</div>
+    <div class="setrow"><span>${ic("sparkle")}画面の明るさ</span>
+      <div class="seg3">${[["auto","自動"],["light","ライト"],["dark","ダーク"]].map(([k,n])=>`<button class="pill" data-act="theme" data-v="${k}" aria-pressed="${load("theme","auto")===k}">${n}</button>`).join("")}</div>
+    </div>
+    <p class="note" style="margin-top:6px">「自動」はスマホやパソコンの設定に合わせます。</p>
+  </div>`;
+};
+
+V.annivs = () => {
+  const opt = (v, label) => `<option value="${v}">${label}</option>`;
+  const list = [...annivs].sort((a,b)=>a.m-b.m || a.d-b.d);
+  return `${bar("誕生日・記念日")}<div class="pad">
+    <p style="font-size:13px;margin-top:0;color:var(--muted)">登録すると、ホームに「あと何日」が表示されます。毎年くり返します。</p>
+    ${list.length ? `<div class="menu">${list.map(a=>`<div class="mrow" style="cursor:default">${ic("calendar")}<span>${esc(a.name)}<br><small style="color:var(--muted)">${a.m}月${a.d}日${a.s ? "・" + SCENES.find(s=>s.id===a.s).name : ""}</small></span><button class="iconbtn" data-act="delanniv" data-id="${a.id}" aria-label="${esc(a.name)}を削除">${ic("trash")}</button></div>`).join("")}</div>`
+      : `<div class="empty" style="padding:20px 10px">${ic("calendar")}<div>まだ登録はありません</div></div>`}
+    <div class="label">新しく登録する</div>
+    <div style="display:grid;gap:10px">
+      <input id="an-name" class="field" maxlength="30" placeholder="名前（例：母の誕生日、結婚記念日）">
+      <div class="range">
+        <select id="an-m" class="field" aria-label="月">${Array.from({length:12},(_,i)=>opt(i+1,(i+1)+"月")).join("")}</select>
+        <span></span>
+        <select id="an-d" class="field" aria-label="日">${Array.from({length:31},(_,i)=>opt(i+1,(i+1)+"日")).join("")}</select>
+      </div>
+      <select id="an-s" class="field" aria-label="シーン">${opt("","シーン（おすすめに使います・任意）")}${SCENES.map(s=>opt(s.id,s.name)).join("")}</select>
+      <button class="primary" data-act="addanniv">登録する</button>
+    </div>
+  </div>`;
+};
+
+
+// ================= ショッピングサイトとの連携 =================
+// 楽天市場・Yahoo!ショッピングへの問い合わせは、Cloudflare Workers に置いた中継サーバーを通す。
+// 各サイトのIDやキーは中継サーバー側にだけ保存してあり、このファイルには入っていない。
+const API_BASE = "https://giftly-api.shogoganbaru0520.workers.dev";   // 中継サーバーのアドレス
+const RK = { ready(){ return !!API_BASE; } };
+const SOURCES = {
+  r: {name:"楽天", path:"/search", buy:"楽天で購入する",
+      credit:`<a href="https://webservice.rakuten.co.jp/" target="_blank" rel="noopener">Supported by Rakuten Developers</a>`},
+  y: {name:"Yahoo!", path:"/yahoo", buy:"Yahoo!で購入する",
+      credit:`<a href="https://developer.yahoo.co.jp/sitemap/" target="_blank" rel="noopener">Webサービス by Yahoo! JAPAN</a>`},
+};
+let yahooOn = true;   // 中継サーバーにYahoo!のIDが登録されていなければ false になる
+const PER_PAGE = 30;  // 1回に取ってくる数
+
+// サイトから届いた文字をそのまま画面に入れないための変換
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function apiGet(path, p){
+  return fetch(API_BASE + path + "?" + new URLSearchParams(p))
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))
+    .then(d => d.error ? Promise.reject(new Error(d.error)) : d);
+}
+
+// 1秒に1回までのルールを守るため、サイトごとに順番待ちの列に並べて呼ぶ。結果は1日だけ覚えておく
+//   prio … true なら列の先頭に割りこむ（商品の一覧はこちら。写真は後回し）
+//   need … 順番が来たときにまだ必要か（画面から消えた写真は取りに行かない）
+const jobs = {r: [], y: []}, busy = {r: false, y: false};
+function enqueue(src, fn, prio, need){
+  return new Promise((resolve, reject) => {
+    const job = {fn, resolve, reject, need};
+    prio ? jobs[src].unshift(job) : jobs[src].push(job);
+    pump(src);
+  });
+}
+function pump(src){
+  if (busy[src] || !jobs[src].length) return;
+  const j = jobs[src].shift();
+  if (j.need && !j.need()) { j.reject(new Error("skipped")); return pump(src); }
+  busy[src] = true;
+  j.fn().then(j.resolve, j.reject).finally(() => setTimeout(() => { busy[src] = false; pump(src); }, 1100));
+}
+const pending = {};
+function shopSearch(params, src = "r", prio = false, need = null){
+  const p = {hits: PER_PAGE, ...params};
+  const cacheKey = "rkc-" + src + JSON.stringify(p);
+  const hit = load(cacheKey, null);
+  if (hit && Date.now() - hit.t < 86400000) return Promise.resolve(hit.d);
+  if (pending[cacheKey]) return pending[cacheKey];
+  const job = enqueue(src, () => apiGet(SOURCES[src].path, p), prio, need)
+    .then(d => {
+      if (d.disabled) { if (src === "y") yahooOn = false; return {items: [], disabled: true}; }
+      const items = (d.Items || d.items || []).map(it => norm(it, src));
+      const data = {items};
+      save(cacheKey, {t: Date.now(), d: data});
+      return data;
+    })
+    .finally(() => delete pending[cacheKey]);
+  return pending[cacheKey] = job;
+}
+const rkSearch = (params, need) => shopSearch(params, "r", false, need);
+// サイトから届いた商品データを、アプリの中で使う形にそろえる
+const norm = (it, src) => ({
+  itemName: it.itemName, itemPrice: Number(it.itemPrice) || 0, itemUrl: it.itemUrl, url: it.affiliateUrl || it.itemUrl,
+  img: it.img || rkImg(it), reviewAverage: Number(it.reviewAverage) || 0, reviewCount: Number(it.reviewCount) || 0,
+  shopName: it.shopName || "", rank: Number(it.rank) || 0, src,
+});
+// 楽天の画像のURLを大きいサイズに変える
+function rkImg(it){
+  const u = (it.mediumImageUrls || [])[0];
+  const s = typeof u === "string" ? u : u && u.imageUrl;
+  return s ? s.replace(/_ex=\d+x\d+/, "_ex=400x400") : "";
+}
+// 贈り物の候補 → ショッピングサイトで探すときの言葉と価格の幅
+const giftParams = g => ({keyword: g.name.replace(/（.*?）/g, "").trim() + " ギフト", minPrice: Math.round(g.price*0.5), maxPrice: Math.round(g.price*2)});
+// （一覧の1ページ目と同じ条件にして、同じ結果を使い回す）
+const giftItems = (g, need) => rkSearch({...giftParams(g), sort: "-reviewCount", page: 1}, need);
+
+// 画面に出した商品を覚えておく（ほしいものリストのボタン用）
+const rkReg = [];
+const stars = v => "★".repeat(Math.round(v)) + "☆".repeat(5 - Math.round(v));
+const rkCard = it => {
+  const n = rkReg.push(it) - 1, on = inWish("r:" + it.itemUrl);
+  return `<div class="rkitem"><a href="${esc(it.url)}" target="_blank" rel="noopener">
+  <img src="${esc(it.img)}" alt="" loading="lazy">
+  <div class="t"><span class="nm">${it.rank ? `<span class="rnum">${it.rank}位</span>` : ""}<span class="src ${it.src}">${SOURCES[it.src].name}</span>${esc(it.itemName)}</span><b>${yen(it.itemPrice)}</b>
+  <span class="meta">${it.reviewCount ? `<span class="stars">${stars(it.reviewAverage)}</span> ${it.reviewAverage.toFixed(1)}（${it.reviewCount.toLocaleString()}件）・` : "レビューなし・"}${esc(it.shopName)}</span></div></a>
+  <button class="wbtn ${on ? "on" : ""}" data-act="wishr" data-n="${n}" aria-pressed="${on}" aria-label="ほしいものリストに追加">${ic("gift")}</button></div>`;
+};
+
+// ---------- 商品の一覧（楽天＋Yahoo!をまとめて表示・もっと見る・並べかえ） ----------
+// 画面を作り直しても読み込んだ商品を覚えておけるよう、条件ごとに状態を持つ
+const SL = {};
+const API_SORT = {pop: "-reviewCount", rate: "-reviewAverage", low: "+itemPrice", high: "-itemPrice"};
+function shopList(params, title){
+  const id = "sl-" + Math.abs([...JSON.stringify(params)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7));
+  if (!SL[id]) SL[id] = {params, sort: "pop", star: false, src: "all", items: [], page: 0, done: {r: false, y: false}, loading: false, error: false};
+  return `<div class="label" style="margin-bottom:8px">${title}</div><div class="shoplist" id="${id}"></div>`;
+}
+// 並べかえたときは最初から読み直す（読み込み途中の古い結果は gen で見分けて捨てる）
+function slReset(st){ Object.assign(st, {items: [], page: 0, done: {r: false, y: false}, error: false, loading: false, gen: (st.gen || 0) + 1}); }
+function slMore(id){
+  const st = SL[id]; if (!st || st.loading) return;
+  st.loading = true; slDraw(id);
+  const gen = st.gen;
+  const page = st.page + 1, srcs = ["r", ...(yahooOn ? ["y"] : [])].filter(s => !st.done[s]);
+  // 安い順のとき、1円などのギフトに向かない商品が並ばないよう、下限がなければ500円からにする
+  const params = st.sort === "low" && !st.params.minPrice ? {...st.params, minPrice: 500} : st.params;
+  Promise.allSettled(srcs.map(s => shopSearch({...params, sort: API_SORT[st.sort], page}, s, true).then(d => [s, d])))
+    .then(rs => {
+      if (st.gen !== gen) return;
+      let ok = 0;
+      rs.forEach((r, i) => {
+        if (r.status !== "fulfilled") { st.done[srcs[i]] = true; if (srcs[i] === "y") yahooOn = false; return; }
+        ok++;
+        const [s, d] = r.value;
+        // 楽天は1回30件ちょうど返す。Yahoo!は「ふるさと納税」を除くので少し減ることがある
+        if (d.disabled || d.items.length < (s === "y" ? 1 : PER_PAGE)) st.done[s] = true;
+        const seen = new Set(st.items.map(x => x.itemUrl));
+        st.items.push(...d.items.filter(x => !seen.has(x.itemUrl)));
+      });
+      if (!ok) { st.error = true; srcs.forEach(s => st.done[s] = true); }
+      st.page = page; st.loading = false; slDraw(id);
+    });
+}
+function slDraw(id){
+  const el = document.getElementById(id), st = SL[id];
+  if (!el || !st) return;
+  // 並べかえと絞りこみ
+  let list = st.items.filter(it => (st.src === "all" || it.src === st.src) && (!st.star || it.reviewAverage >= 4));
+  const by = {pop: (a,b) => b.reviewCount - a.reviewCount, rate: (a,b) => (b.reviewAverage - a.reviewAverage) || (b.reviewCount - a.reviewCount),
+              low: (a,b) => a.itemPrice - b.itemPrice, high: (a,b) => b.itemPrice - a.itemPrice}[st.sort];
+  list = [...list].sort(by);
+  // 価格帯と口コミのまとめ
+  const prices = st.items.map(x => x.itemPrice).filter(Boolean).sort((a,b) => a-b);
+  const reviewed = st.items.filter(x => x.reviewCount);
+  const avg = reviewed.length ? reviewed.reduce((s,x) => s + x.reviewAverage, 0) / reviewed.length : 0;
+  const summary = prices.length ? `<div class="slsum">
+      <div><span>最安</span><b>${yen(prices[0])}</b></div>
+      <div><span>中央</span><b>${yen(prices[Math.floor(prices.length/2)])}</b></div>
+      <div><span>最高</span><b>${yen(prices[prices.length-1])}</b></div>
+      <div><span>平均評価</span><b>${avg ? "★" + avg.toFixed(1) : "—"}</b></div>
+    </div>` : "";
+  const nR = st.items.filter(x => x.src === "r").length, nY = st.items.filter(x => x.src === "y").length;
+  const pill = (act, v, label, on) => `<button class="pill" data-act="${act}" data-id="${id}" data-v="${v}" aria-pressed="${on}">${label}</button>`;
+  const controls = st.items.length ? `<div class="sortbar">
+      ${[["pop","人気順"],["rate","評価が高い順"],["low","安い順"],["high","高い順"]].map(([k,n]) => pill("slsort", k, n, st.sort === k)).join("")}
+      ${pill("slstar", "", "★4以上", st.star)}
+    </div>
+    ${nY ? `<div class="sortbar">${pill("slsrc","all",`すべて ${st.items.length}`, st.src==="all")}${pill("slsrc","r",`楽天 ${nR}`, st.src==="r")}${pill("slsrc","y",`Yahoo! ${nY}`, st.src==="y")}</div>` : ""}` : "";
+  const allDone = Object.entries(st.done).every(([s, v]) => v || (s === "y" && !yahooOn));
+  const foot = st.loading ? `<p class="note" style="margin:0;text-align:center">商品を読み込み中…</p>`
+    : st.error && !st.items.length ? `<p class="note" style="margin:0">商品を読み込めませんでした。時間をおいてもう一度開いてください。</p>`
+    : !allDone ? `<button class="ghost more-btn" data-act="slmore" data-id="${id}">もっと見る（${PER_PAGE}件ずつ）</button>`
+    : st.items.length ? `<p class="note" style="margin:0;text-align:center">これで全部です（${st.items.length}件）</p>`
+    : `<p class="note" style="margin:0">見つかりませんでした。条件を変えてみてください。</p>`;
+  const credits = [...new Set(st.items.map(x => x.src))].map(s => SOURCES[s].credit).join("　") || SOURCES.r.credit;
+  el.innerHTML = `${summary}${controls}<div class="rklist">${list.map(rkCard).join("")}</div>
+    ${list.length === 0 && st.items.length ? `<p class="note">この条件の商品はまだありません。「もっと見る」で増やせます。</p>` : ""}
+    ${foot}<p class="credit">${credits}</p>`;
+}
+
+// ---------- 人気ギフトランキング（楽天市場のランキング・毎日更新） ----------
+const RANK_GENRES = [["551167","スイーツ"],["510915","お酒"],["100005","花・ガーデン"],["216129","アクセサリー"],["100939","コスメ"],["558929","腕時計"],["558944","キッチン"],["100804","インテリア"],["","総合"]];
+const RANK_WHO = [["","すべての人"],["20-1","20代女性"],["20-0","20代男性"],["30-1","30代女性"],["30-0","30代男性"],["40-1","40代女性"],["40-0","40代男性"],["50-1","50代以上女性"],["50-0","50代以上男性"]];
+let rankG = load("rankG", "551167"), rankW = "";
+const RANKS = {};   // 条件ごとに {items, page, done, loading, error, updated}
+const rankKey = () => rankG + "|" + rankW;
+const rankState = () => RANKS[rankKey()] || (RANKS[rankKey()] = {items: [], page: 0, done: false, loading: false, error: false, updated: ""});
+function rankLoad(){
+  const st = rankState();
+  if (st.loading || st.done) return;
+  st.loading = true; rankDraw();
+  const page = st.page + 1, p = {page};
+  if (rankG) p.genreId = rankG;
+  if (rankW) { const [a, s] = rankW.split("-"); p.age = a; p.sex = s; }
+  // ランキングは毎日変わるので、覚えておくのは1時間だけ
+  const cacheKey = "rkc-rank" + JSON.stringify(p), hit = load(cacheKey, null);
+  const get = hit && Date.now() - hit.t < 3600000 ? Promise.resolve(hit.d)
+    : enqueue("r", () => apiGet("/ranking", p), true).then(d => { save(cacheKey, {t: Date.now(), d}); return d; });
+  get.then(d => {
+    const items = (d.Items || []).map(it => norm(it, "r"));
+    const seen = new Set(st.items.map(x => x.itemUrl));
+    st.items.push(...items.filter(x => !seen.has(x.itemUrl)));
+    st.items.sort((a, b) => a.rank - b.rank);   // 楽天からは逆順で届くことがあるので、1位から並べ直す
+    st.page = page; st.done = !items.length || page >= 34; st.updated = d.lastBuildDate || st.updated;
+  }).catch(() => { st.error = true; st.done = true; })
+    .finally(() => { st.loading = false; rankDraw(); });
+}
+const rankPills = () => RANK_GENRES.map(([g, n]) => `<button class="pill" data-act="rkg" data-v="${g}" aria-pressed="${rankG === g}">${n}</button>`).join("");
+function fmtUpd(s){
+  const d = new Date(s);
+  return isNaN(d) ? s : `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+// ホーム用の小さいカード
+const rankCardSmall = it => {
+  const n = rkReg.push(it) - 1, on = inWish("r:" + it.itemUrl);
+  return `<div class="pcard" style="position:relative"><a class="pcard" href="${esc(it.url)}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+    <div class="thumb" style="--h:262"><img class="ph" src="${esc(it.img)}" alt="" loading="lazy"><span class="rankno r${Math.min(it.rank, 4)}">${it.rank}</span></div>
+    <span class="nm">${esc(it.itemName)}</span><span class="pr">${yen(it.itemPrice)}</span>
+    ${it.reviewCount ? `<span class="meta"><span class="stars">★</span>${it.reviewAverage.toFixed(1)}（${it.reviewCount.toLocaleString()}件）</span>` : ""}</a>
+    <button class="wbtn rkwish ${on ? "on" : ""}" data-act="wishr" data-n="${n}" aria-pressed="${on}" aria-label="ほしいものリストに追加">${ic("gift")}</button></div>`;
+};
+function rankDraw(){
+  const st = rankState();
+  const row = document.getElementById("rankrow");
+  if (row) {
+    row.innerHTML = st.items.length ? st.items.slice(0, 10).map(rankCardSmall).join("")
+      : st.error ? GIFTS.filter(g => g.b === 1).slice(0, 8).map(pcard).join("")   // 読めないときは定番ギフトを出す
+      : `<p class="note" style="margin:0">ランキングを読み込み中…</p>`;
+    if (st.error) hydratePhotos(row);
+  }
+  const upd = document.getElementById("rankupd");
+  if (upd) upd.textContent = st.error && !st.items.length ? "ランキングを読み込めなかったので、定番ギフトを表示しています。"
+    : `楽天市場ランキング・毎日更新${st.updated ? `（${fmtUpd(st.updated)} 時点）` : ""}`;
+  const list = document.getElementById("ranklist");
+  if (list) list.innerHTML = st.items.map(rkCard).join("")
+    + (st.loading ? `<p class="note" style="text-align:center;margin:0">ランキングを読み込み中…</p>`
+      : st.error && !st.items.length ? `<p class="note" style="margin:0">ランキングを読み込めませんでした。時間をおいてもう一度開いてください。</p>`
+      : !st.done ? `<button class="ghost more-btn" data-act="rkmore">もっと見る（30位ずつ）</button>` : "")
+    + `<p class="credit">${SOURCES.r.credit}</p>`;
+}
+V.ranking = () => `${bar("人気ギフトランキング", wishBtn())}<div class="pad">
+  <p class="note" style="margin:0 0 10px">楽天市場の売れ筋ランキングです。毎日自動で更新されます。</p>
+  <div class="sortbar">${rankPills()}</div>
+  <select id="rank-who" class="field" aria-label="年代・性別">${RANK_WHO.map(([v, n]) => `<option value="${v}" ${rankW === v ? "selected" : ""}>${n}に人気</option>`).join("")}</select>
+  <div id="ranklist" class="rklist" style="margin-top:12px"></div>
+</div>`;
+
+// ---------- いま話題（YouTube・はてなブックマーク・急上昇） ----------
+// 動画や記事のお気に入り（定番ギフトのお気に入り favs とは別に保存）
+//   {k:"v:動画ID" または "a:記事URL", type:"v"|"a", title, url, img, sub}
+let favx = load("favx", []);
+const isFavx = k => favx.some(f => f.k === k);
+const trReg = [];   // 画面に出した動画・記事（♡ボタン用）
+const TOPIC_BASE = ["誕生日プレゼント","クリスマス","バレンタイン","ホワイトデー","母の日","父の日","敬老の日","結婚祝い","出産祝い","手土産","お歳暮"];
+const trTopics = () => { const n = upcoming()[0].n; return [...new Set([TOPIC_BASE.includes(n) ? n : null, ...TOPIC_BASE].filter(Boolean))]; };
+let trTopic = null, trTab = "video";
+const topicQuery = t => /プレゼント|ギフト|手土産|祝い|お歳暮|お中元/.test(t) ? t : t + " プレゼント";
+const TR = {};   // 「種類|話題」ごとに {items, loading, error, disabled, next}
+function trState(kind, topic){
+  // 急上昇の商品はジャンルごと、話題のワードは1つだけ
+  const k = kind + "|" + (kind === "rise" ? "g" + rankG : kind === "words" ? "-" : topic); return TR[k] || (TR[k] = {items: [], loading: false, error: false, disabled: false, next: "", loaded: false}); }
+function trLoad(kind, topic, more = false){
+  const st = trState(kind, topic);
+  if (st.loading || (st.loaded && !more)) return;
+  const p = kind === "video" ? {q: topicQuery(topic) + " 紹介", ...(more && st.next ? {pageToken: st.next} : {})}
+          : kind === "article" ? {q: topicQuery(topic)}
+          : kind === "rise" ? {period: "realtime", page: 1, ...(rankG ? {genreId: rankG} : {})}
+          : {type: "up"};
+  const path = {video: "/youtube", article: "/articles", rise: "/ranking", words: "/trendwords"}[kind];
+  // 3時間はこの端末で覚えておく
+  const cacheKey = "rkc-tr" + path + JSON.stringify(p), hit = load(cacheKey, null);
+  st.loading = true; trDraw();
+  const get = hit && Date.now() - hit.t < 10800000 ? Promise.resolve(hit.d)
+    : (kind === "rise" ? enqueue("r", () => apiGet(path, p), true) : apiGet(path, p)).then(d => { save(cacheKey, {t: Date.now(), d}); return d; });
+  get.then(d => {
+    if (d.disabled) { st.disabled = true; return; }
+    const items = kind === "rise" ? (d.Items || []).map(it => norm(it, "r")).sort((a, b) => a.rank - b.rank) :kind === "words" ? (d.words || []) : (d.items || []);
+    st.items.push(...items); st.next = d.next || "";
+  }).catch(() => { st.error = true; })
+    .finally(() => { st.loading = false; st.loaded = true; trDraw(); });
+}
+const fmtDay = s => { const d = new Date(s); return isNaN(d) ? "" : `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`; };
+const favxBtn = (item) => {
+  const n = trReg.push(item) - 1, on = isFavx(item.k);
+  return `<button class="favxbtn ${on ? "on" : ""}" data-act="favx" data-n="${n}" aria-pressed="${on}" aria-label="お気に入り">${ic("heart")}</button>`;
+};
+// 動画を押すと、アプリの中の「動画で紹介された商品」画面を開く
+const VIDS = {};
+const videoCard = v => { VIDS[v.id] = v; return `<div class="vcard"><button class="vopen" data-act="video" data-v="${esc(v.id)}">
+    <div class="vthumb"><img src="${esc(v.img)}" alt="" loading="lazy"><span class="play">${ic("play")}</span><span class="vtag">紹介商品を見る</span></div>
+    <span class="nm2">${esc(v.title)}</span><span class="meta">${esc(v.channel)}・${fmtDay(v.date)}</span></button>
+    ${favxBtn({k: "v:" + v.id, type: "v", title: v.title, url: "https://www.youtube.com/watch?v=" + v.id, img: v.img, sub: v.channel})}</div>`; };
+
+// ---------- 動画で紹介された商品 ----------
+const VI = {};   // 動画ごとに {items, loading, error, disabled, loaded}
+function viLoad(id){
+  const st = VI[id] || (VI[id] = {items: [], loading: false, error: false, disabled: false, loaded: false});
+  if (st.loading || st.loaded) return viDraw(id);
+  const cacheKey = "rkc-vi2" + id, hit = load(cacheKey, null);
+  st.loading = true; viDraw(id);
+  const get = hit && Date.now() - hit.t < 86400000 ? Promise.resolve(hit.d)
+    : apiGet("/videoitems", {id}).then(d => { save(cacheKey, {t: Date.now(), d}); return d; });
+  get.then(d => {
+    if (d.disabled) { st.disabled = true; return; }
+    if (d.video) VIDS[id] = {...(VIDS[id] || {}), ...d.video};
+    st.items = (d.items || []).map(x => ({...x, item: x.item ? norm(x.item, "r") : null}));
+  }).catch(() => { st.error = true; })
+    .finally(() => { st.loading = false; st.loaded = true; viDraw(id); });
+}
+function viDraw(id){
+  const el = document.getElementById("vitems"), st = VI[id];
+  if (!el || !st) return;
+  if (st.loading) { el.innerHTML = `<p class="note" style="margin:0">動画の説明文から商品を探しています…（はじめての動画は10秒ほどかかります）</p>`; return; }
+  if (st.disabled) { el.innerHTML = `<p class="note" style="margin:0">YouTubeとの連携は準備中です。</p>`; return; }
+  if (st.error) { el.innerHTML = `<p class="note" style="margin:0">読み込めませんでした。時間をおいてもう一度開いてください。</p>`; return; }
+  if (!st.items.length) { el.innerHTML = `<p class="note" style="margin:0">この動画の説明文には、商品の名前やリンクが見つかりませんでした。</p>`; return; }
+  el.innerHTML = st.items.map(x => `<div class="vitem">
+      <div class="vname"><span class="vtag2 ${x.exact ? "ok" : ""}">${x.exact ? "紹介された商品" : x.item ? "似た商品" : "見つからず"}</span>${esc(x.name)}</div>
+      ${x.item ? rkCard(x.item) : `<a class="ghost" href="https://search.rakuten.co.jp/search/mall/${encodeURIComponent(x.name)}/" target="_blank" rel="noopener">楽天で「${esc(x.name.slice(0, 20))}」を探す</a>`}
+    </div>`).join("") + `<p class="credit">${SOURCES.r.credit}　<a href="https://www.youtube.com/" target="_blank" rel="noopener">動画：YouTube</a></p>`;
+}
+V.video = ({id}) => {
+  const v = VIDS[id] || favx.find(f => f.k === "v:" + id) || {id, title: "", channel: ""};
+  const url = "https://www.youtube.com/watch?v=" + id;
+  return `${bar("動画で紹介された商品", wishBtn())}
+  <div class="ytwrap"><iframe src="https://www.youtube-nocookie.com/embed/${esc(id)}" title="${esc(v.title)}" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>
+  <div class="pad" style="padding-block:14px 0;display:grid;gap:8px">
+    <div style="display:flex;gap:10px;align-items:flex-start"><div style="flex:1;min-width:0"><b style="font-size:15px;line-height:1.5;display:block">${esc(v.title)}</b>
+      <span class="odate">${esc(v.channel || v.sub || "")}</span></div>
+      ${favxBtn({k: "v:" + id, type: "v", title: v.title, url, img: v.img, sub: v.channel || v.sub || ""})}</div>
+    <a class="ghost" href="${url}" target="_blank" rel="noopener">YouTubeで見る</a>
+    <div class="label" style="margin:10px 0 0">この動画で紹介されている商品</div>
+    <p class="note" style="margin:0">動画の説明文に書かれた商品名やリンクから、楽天市場で同じ商品（なければ似た商品）を探しています。</p>
+    <div id="vitems" class="rklist"></div>
+  </div>`;
+};
+const articleCard = a => `<div class="acard"><a href="${esc(a.url)}" target="_blank" rel="noopener">
+    ${a.img ? `<img src="${esc(a.img)}" alt="" loading="lazy">` : `<span class="aimg">${ic("letter")}</span>`}
+    <span class="t"><span class="nm2">${esc(a.title)}</span><span class="meta"><b class="users">${a.users.toLocaleString()} users</b>・${esc(a.site)}・${fmtDay(a.date)}</span></span></a>
+    ${favxBtn({k: "a:" + a.url, type: "a", title: a.title, url: a.url, img: a.img, sub: a.site})}</div>`;
+function trBody(kind, topic, limit){
+  const st = trState(kind, topic);
+  const list = limit ? st.items.slice(0, limit) : st.items;
+  if (st.disabled) return `<p class="note" style="margin:0">${kind === "video" ? "YouTubeの動画は準備中です。" : "この情報は準備中です。"}</p>`;
+  if (!list.length) return st.loading || !st.loaded ? `<p class="note" style="margin:0">読み込み中…</p>`
+    : st.error ? `<p class="note" style="margin:0">読み込めませんでした。時間をおいてもう一度開いてください。</p>`
+    : `<p class="note" style="margin:0">見つかりませんでした。ほかの話題を選んでみてください。</p>`;
+  if (kind === "video") return `<div class="${limit ? "hscroll vrow" : "vgrid"}">${list.map(videoCard).join("")}</div>`
+    + (!limit && st.next ? `<button class="ghost more-btn" data-act="trmore">${st.loading ? "読み込み中…" : "もっと見る"}</button>` : "")
+    + `<p class="credit"><a href="https://www.youtube.com/" target="_blank" rel="noopener">動画：YouTube</a></p>`;
+  if (kind === "article") return `<div class="rklist">${list.map(articleCard).join("")}</div>
+    <p class="credit"><a href="https://b.hatena.ne.jp/" target="_blank" rel="noopener">はてなブックマークで話題の記事（users＝ブックマークした人数）</a></p>`;
+  if (kind === "rise") return `<div class="rklist">${list.map(rkCard).join("")}</div><p class="credit">${SOURCES.r.credit}</p>`;
+  return `<div class="pills">${list.map((w, i) => `<button class="pill" data-act="kwsearch" data-q="${esc(w)}"><b style="color:var(--accent)">${i + 1}</b> ${esc(w)}</button>`).join("")}</div>
+    <p class="credit">${SOURCES.y.credit}</p>`;
+}
+function trDraw(){
+  const topic = trTopic || trTopics()[0];
+  const box = document.getElementById("trbox");
+  if (box) box.innerHTML = trBody(trTab, topic);
+  const home = document.getElementById("hometrend");
+  if (home) {
+    const v = trState("video", topic);
+    home.innerHTML = v.disabled || (v.loaded && !v.items.length) ? trBody("article", topic, 3) : trBody("video", topic, 8);
+    if (v.disabled || (v.loaded && !v.items.length)) trLoad("article", topic);
+  }
+}
+const TR_TABS = [["video","動画"],["article","記事"],["rise","急上昇の商品"],["words","話題のワード"]];
+V.trend = () => {
+  const topic = trTopic || trTopics()[0];
+  const wordsOff = trState("words", topic).disabled;
+  return `<div class="bar pad" style="grid-template-columns:44px 1fr 44px"><div></div><h1>いま話題</h1>${wishBtn()}</div><div class="pad">
+    <p class="note" style="margin:0 0 10px">YouTubeの紹介動画や、ネットで話題の記事から、プレゼント選びのヒントを集めました。♡でお気に入りに保存できます。</p>
+    ${trTab === "rise" || trTab === "words" ? "" : `<div class="sortbar">${trTopics().map(t => `<button class="pill" data-act="trtopic" data-v="${esc(t)}" aria-pressed="${t === topic}">${esc(t)}</button>`).join("")}</div>`}
+    <div class="seg4">${TR_TABS.filter(([k]) => !(k === "words" && wordsOff)).map(([k, n]) => `<button class="pill" data-act="trtab" data-v="${k}" aria-pressed="${trTab === k}">${n}</button>`).join("")}</div>
+    ${trTab === "rise" ? `<p class="note" style="margin:8px 0">楽天市場で、いま売れている商品（リアルタイム）</p><div class="sortbar">${rankPills()}</div>` : ""}
+    <div id="trbox" style="margin-top:12px"></div>
+  </div>`;
+};
+
+// 画面に出ている候補に写真をはめこむ
+function hydratePhotos(root = document){
+  const put = (el, d) => {
+    const u = d.items[0] && d.items[0].img;
+    if (u && el.isConnected && !el.querySelector("img.ph")) el.insertAdjacentHTML("afterbegin", `<img class="ph" src="${esc(u)}" alt="" loading="lazy">`);
+  };
+  const need = el => () => el.isConnected;
+  // ギフトの候補ごとの写真
+  root.querySelectorAll("[data-photo]").forEach(el => giftItems(GIFTS[+el.dataset.photo], need(el)).then(d => put(el, d)).catch(() => {}));
+  // シーンや看板の写真
+  root.querySelectorAll("[data-kw]").forEach(el => rkSearch({keyword: el.dataset.kw, sort: "-reviewCount", page: 1}, need(el)).then(d => put(el, d)).catch(() => {}));
+}
+
+// 画面に出ている候補に写真をはめこみ、商品の一覧やランキングを読み込む
+function hydrate(){
+  if (!RK.ready()) return;
+  hydratePhotos();
+  const topic = trTopic || trTopics()[0];
+  if (document.getElementById("trbox")) { trLoad(trTab, topic); trDraw(); }
+  if (document.getElementById("vitems")) viLoad(cur().id);
+  if (document.getElementById("hometrend")) { trLoad("video", topic); trDraw(); }
+  if (document.getElementById("rankrow") || document.getElementById("ranklist")) {
+    const st = rankState();
+    st.page === 0 && !st.done ? rankLoad() : rankDraw();
+  }
+  // 商品の一覧
+  document.querySelectorAll(".shoplist").forEach(el => SL[el.id].items.length || SL[el.id].done.r ? slDraw(el.id) : slMore(el.id));
+}
+
+// ================= 描画 =================
+function render(scrollTop){
+  const c = cur();
+  document.getElementById("app").innerHTML = V[c.s](c);
+  // 下のタブ（スプラッシュでは出さない）
+  const tb = document.getElementById("tabbar");
+  tb.hidden = c.s === "splash";
+  document.getElementById("app").style.paddingBottom = c.s==="splash" ? "0" : "";
+  const root = stack[0].s;
+  const active = {home:"home",search:"search",trend:"trend",favs:"favs",mypage:"mypage"}[root] || "home";
+  tb.innerHTML = [["home","home","ホーム"],["search","search","探す"],["trend","flame","話題"],["favs","heart","お気に入り"],["mypage","user","マイページ"]]
+    .map(([s,icon,n])=>`<button data-act="tab" data-s="${s}" ${active===s?'aria-current="page"':""}>${ic(icon)}${n}</button>`).join("");
+  if (scrollTop) window.scrollTo(0,0);
+
+  // 入力欄はその都度つなぐ
+  [["q-min","min"],["q-max","max"],["q-cat","cat"]].forEach(([id,k]) => {
+    const el = document.getElementById(id);
+    if (el) el.onchange = e => { q[k] = e.target.value; if (k !== "cat") render(); };
+  });
+  const who = document.getElementById("rank-who");
+  if (who) who.onchange = e => { rankW = e.target.value; render(); };
+  const kw = document.getElementById("kw");
+  if (kw) kw.oninput = e => q.kw = e.target.value;
+  hydrate();
+}
+
+function toast(t){
+  const el = document.getElementById("toast");
+  el.textContent = t; el.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(()=>el.hidden = true, 1800);
+}
+
+// ボタンの操作をまとめて受け取る
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const d = b.dataset, id = +d.id;
+  switch (d.act) {
+    case "start": save("started", true); tab("home"); break;
+    case "back": back(); break;
+    case "go": go(d.s); break;
+    case "tab": tab(d.s); break;
+    case "scene": go("scene", {id:d.id}); break;
+    case "detail": go("detail", {id}); break;
+    case "list": go("list", {kind:d.kind}); break;
+    case "sort": sortMode = d.v; render(); break;
+    case "q": q[d.k] = q[d.k]===d.v ? "" : d.v; render(); break;
+    case "qr": {
+      const same = String(q.min)===d.min && String(q.max)===d.max;
+      q.min = same ? "" : d.min; q.max = same ? "" : d.max; render(); break;
+    }
+    case "kwsearch": Object.assign(q, {kw:d.q, min:"", max:"", cat:"", wrap:""}); go("list", {kind:"search"}); break;
+    case "theme": save("theme", d.v); applyTheme(); render(); break;
+    case "addanniv": {
+      const name = document.getElementById("an-name").value.trim();
+      if (!name) { toast("名前を入れてください"); break; }
+      annivs = [...annivs, {id: Date.now(), name, m: +document.getElementById("an-m").value, d: +document.getElementById("an-d").value, s: document.getElementById("an-s").value}];
+      save("annivs", annivs); toast("登録しました"); render(); break;
+    }
+    case "delanniv": annivs = annivs.filter(a => a.id !== id); save("annivs", annivs); toast("削除しました"); render(); break;
+    case "r": r[d.k] = r[d.k]===d.v ? "" : d.v; render(); break;
+    case "fav":
+      e.stopPropagation();
+      favs = isFav(id) ? favs.filter(x=>x!==id) : [...favs, id];
+      save("favs", favs); toast(isFav(id) ? "お気に入りに追加しました" : "お気に入りから外しました"); render(); break;
+    // 定番ギフトをほしいものリストへ
+    case "wishg": toggleWish({k:"g:"+id, type:"g", id}); render(); break;
+    // ショッピングサイトの商品をほしいものリストへ（画面は作り直さず、ボタンだけ切りかえる）
+    case "wishr": {
+      const it = rkReg[+d.n]; if (!it) break;
+      const on = toggleWish({k:"r:"+it.itemUrl, type:"r", src:it.src, name:it.itemName, price:it.itemPrice, url:it.url, img:it.img, shop:it.shopName});
+      b.classList.toggle("on", on); b.setAttribute("aria-pressed", on);
+      document.querySelectorAll(".wishbtn").forEach(x => x.innerHTML = wishInner());
+      break;
+    }
+    // 商品一覧の操作
+    case "slmore": slMore(d.id); break;
+    case "rkg": rankG = d.v; save("rankG", rankG); render(); break;
+    // いま話題
+    case "trtopic": trTopic = d.v; render(); break;
+    case "video": go("video", {id: d.v}); break;
+    case "trtab": trTab = d.v; render(); break;
+    case "trmore": trLoad(trTab, trTopic || trTopics()[0], true); break;
+    case "favx": {
+      const f = trReg[+d.n]; if (!f) break;
+      const on = !isFavx(f.k);
+      favx = on ? [f, ...favx] : favx.filter(x => x.k !== f.k);
+      save("favx", favx); toast(on ? "お気に入りに追加しました" : "お気に入りから外しました");
+      // 同じ動画・記事のボタンをまとめて切りかえる（お気に入り画面では一覧を作り直す）
+      if (cur().s === "favs" && !on) render();
+      else document.querySelectorAll(".favxbtn").forEach(x => { const g = trReg[+x.dataset.n]; if (g && g.k === f.k) { x.classList.toggle("on", on); x.setAttribute("aria-pressed", on); } });
+      break;
+    }
+    case "rkmore": rankLoad(); break;
+    case "slsort": { const st = SL[d.id]; if (st && st.sort !== d.v) { st.sort = d.v; slReset(st); slMore(d.id); } break; }
+    case "slstar": { const st = SL[d.id]; if (st) { st.star = !st.star; slDraw(d.id); } break; }
+    case "slsrc":  { const st = SL[d.id]; if (st) { st.src = d.v; slDraw(d.id); } break; }
+    case "wrm": wish = wish.filter(w => w.k !== d.k); save("wish", wish); toast("ほしいものリストから外しました"); render(); break;
+  }
+});
+
+render();
+
+// ホーム画面に追加したとき、すぐ開けるようにする（対応していないブラウザでは何もしない）
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
